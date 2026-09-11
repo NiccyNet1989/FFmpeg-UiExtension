@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="UI Extension -Java-:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/UI_Extension__Java__jar</output-path>
+    <root id="archive" name="UI Extension -Java-.jar">
+      <element id="module-output" name="UI Extension -Java-" />
+    </root>
+  </artifact>
+</component>
