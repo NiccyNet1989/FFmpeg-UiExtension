@@ -2,37 +2,43 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 //This class is designed to bridge input between the Java program and the console
 public class ConsoleBridge {
-    String commandLineInput;
+    String[] commandLineInput;
     Scanner scanner;
     File directory;
+    ProcessBuilder processBuilder;
+    Process process;
+    OutputStream outputStream;
+    InputStream inputStream;
+    InputStream stderror;
+
 
     public ConsoleBridge() {
-        this.commandLineInput = "";
+        this.commandLineInput = new String[]{""};
         this.scanner = new Scanner(System.in);
         this.directory = new File(System.getProperty("user.dir").toString());
 
 
         while (!commandLineInput.equals("exit")) {
             System.out.print("> ");
-            this.commandLineInput = scanner.nextLine();
+            this.commandLineInput = new String[]{scanner.nextLine()};
 
-//            String[] commandBuild = {"cmd.exe", "mkdir test", System.getProperty("user.dir").toString()};
-
-            ProcessBuilder processBuilder = new ProcessBuilder();
+            this.processBuilder = new ProcessBuilder();
             processBuilder.directory(this.directory);
-            processBuilder.command("cmd.exe", "/c", commandLineInput);
+//            processBuilder.command("cmd.exe", "/c", this.commandLineInput);
+            processBuilder.command(this.commandLineInput);
 
             try {
-                Process process = processBuilder.start();
+                this.process = processBuilder.start();
 
-                OutputStream outputStream = process.getOutputStream();
-                InputStream inputStream = process.getInputStream();
-                InputStream stderror = process.getErrorStream();
+                this.outputStream = process.getOutputStream();
+                this.inputStream = process.getInputStream();
+                this.stderror = process.getErrorStream();
 
                 process.waitFor(5, TimeUnit.SECONDS);
 
@@ -44,6 +50,36 @@ public class ConsoleBridge {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+
+    // The below constructor is intended to be used for one-time command console calls, and is what the UI will primarily be using
+    public ConsoleBridge(String[] inputtedCommand, Path inputtedDirectory) {
+        this.commandLineInput = inputtedCommand;
+//        this.directory = new File(System.getProperty("user.dir").toString());
+        this.directory = inputtedDirectory.toFile();
+
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.directory(this.directory);
+        processBuilder.command(this.commandLineInput);
+
+        try {
+            this.process = processBuilder.start();
+
+            this.outputStream = process.getOutputStream();
+            this.inputStream = process.getInputStream();
+            this.stderror = process.getErrorStream();
+
+            if (process.waitFor() == 0) {
+                outputStream.flush();
+                outputStream.close();
+                process.destroy();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 }
