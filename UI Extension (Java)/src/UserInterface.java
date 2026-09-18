@@ -250,6 +250,9 @@ public class UserInterface {
         panel3.add(consoleOutput, constraints);
 
         JButton confirmButton = new JButton("Confirm");
+//        confirmButton.addActionListener(e -> {
+//            System.console().readLine()
+//        });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
         constraints.gridy = 1;
