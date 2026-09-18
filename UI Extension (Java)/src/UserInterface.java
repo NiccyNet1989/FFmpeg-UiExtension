@@ -27,7 +27,8 @@ public class UserInterface {
 
         // Basic frame components
         this.frame = new JFrame("User Interface");
-        frame.setLayout(new GridLayout(0, 1));
+        frame.setLayout(new GridBagLayout());
+        frame.getContentPane().setBackground(Color.WHITE);
         GridBagConstraints constraints = new GridBagConstraints();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(new Dimension(600, 400));
@@ -41,13 +42,9 @@ public class UserInterface {
         panel1.setLayout(new GridBagLayout());
         panel2.setLayout(new GridBagLayout());
         panel3.setLayout(new GridBagLayout());
-        frame.add(panel1);
-        frame.add(panel2);
-        frame.add(panel3);
-
-
-        //==================================================
-        // Part 2 - Panel 1
+        panel1.setBackground(Color.WHITE);
+        panel2.setBackground(Color.WHITE);
+        panel3.setBackground(Color.WHITE);
 
         /*
         //Default copy-pastable for easily managing constraints
@@ -63,6 +60,49 @@ public class UserInterface {
         constraints.insets = new Insets(0,0,0,0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.LINE_START;
         */
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;      // Position in grid
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.LINE_START;
+        frame.add(panel1, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 50, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        frame.add(panel2, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;      // Position in grid
+        constraints.gridy = 2;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 2;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.CENTER;
+        frame.add(panel3, constraints);
+
+
+        //==================================================
+        // Part 2 - Panel 1
 
         JLabel filePathLabel = new JLabel("File Path");
         constraints = new GridBagConstraints();
@@ -104,7 +144,7 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.LINE_START;
         panel1.add(new JPanel(), constraints);
 
-        JLabel frameSpinnerLabel = new JLabel("Frames per PNG Extraction");
+        JLabel frameSpinnerLabel = new JLabel("Frames per PNG Extract (Max 60)");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -114,11 +154,11 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 80, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 110, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinnerLabel, constraints);
 
-        SpinnerModel numberSpinnerModel = new SpinnerNumberModel(1,1,200,1); // (Initial, min, max, step)
+        SpinnerModel numberSpinnerModel = new SpinnerNumberModel(1, 1, 60, 1); // (Initial, min, max, step)
         JSpinner frameSpinner = new JSpinner(numberSpinnerModel);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
@@ -129,13 +169,14 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 80, 50, 0);
+        constraints.insets = new Insets(0, 110, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinner, constraints);
 
 
         //==================================================
         // Part 3 - Panel 2
+
         JLabel outputFolderLabel = new JLabel("Output Folder Name");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;          // X Position in grid
@@ -191,12 +232,50 @@ public class UserInterface {
 
         //==================================================
         // Part 4 - Panel 3
+
+        JTextField consoleOutput = new JTextField();
+        consoleOutput.setPreferredSize(new Dimension(500, 80));
+        consoleOutput.setEnabled(false);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 1;      // Position in grid
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.PAGE_START;
+        panel3.add(consoleOutput, constraints);
+
         JButton confirmButton = new JButton("Confirm");
+        constraints = new GridBagConstraints();
+        constraints.gridx = 1;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 100);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.CENTER;
+        panel3.add(confirmButton, constraints);
+
         JButton cancelButton = new JButton("Cancel");
-
-        panel3.add(confirmButton);
-        panel3.add(cancelButton);
-
+        constraints = new GridBagConstraints();
+        constraints.gridx = 1;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 100, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.CENTER;
+        panel3.add(cancelButton, constraints);
 
         //==================================================
         // Part 5 - Deploying the UI
