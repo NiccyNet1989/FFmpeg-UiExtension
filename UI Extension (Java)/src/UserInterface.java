@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,8 +19,11 @@ import javax.swing.undo.UndoManager;
 
 public class UserInterface {
     JFrame frame;
+    Path FFmpegPath;
 
-    public UserInterface() {
+    public UserInterface(Path FFmpegPath) {
+        this.FFmpegPath = FFmpegPath;
+
         //==================================================
         // Part 1 - Base Frame Development
         // Outputs the creation of the UI to the user via the console
@@ -39,14 +43,36 @@ public class UserInterface {
         frame.setJMenuBar(menuBar);
 
         JMenu fileMenu = new JMenu("File");
+        JMenu editMenu = new JMenu("Edit");
         JMenu operationsMenu = new JMenu("Operations");
         JMenu helpMenu = new JMenu("Help");
         JMenu exitMenu = new JMenu("Exit");
 
         menuBar.add(fileMenu);
+        menuBar.add(editMenu);
         menuBar.add(operationsMenu);
         menuBar.add(helpMenu);
         menuBar.add(exitMenu);
+
+        JMenuItem fileOpen = new JMenuItem("Open");
+        fileMenu.add(fileOpen);
+
+        JMenuItem editClear = new JMenuItem("Clear");
+        editMenu.add(editClear);
+
+        JMenuItem operationsMP4toPNGSequence = new JMenuItem("MP4 to PNG Sequence");
+        JMenuItem operationsPNGSequencetoMP4 = new JMenuItem("PNG Sequence to MP4");
+        operationsMenu.add(operationsMP4toPNGSequence);
+        operationsMenu.add(operationsPNGSequencetoMP4);
+
+        JMenuItem helpAbout = new JMenuItem("About");
+        JMenuItem helpCredits = new JMenuItem("Credits");
+        helpMenu.add(helpAbout);
+        helpMenu.add(helpCredits);
+
+        JMenuItem exitClose = new JMenuItem("Close");
+        exitMenu.add(exitClose);
+
 
         // Defining the three panels main panels where the components will reside
         JPanel panel1 = new JPanel();
@@ -284,7 +310,16 @@ public class UserInterface {
 
         JButton confirmButton = new JButton("Confirm");
         confirmButton.addActionListener(e -> {
-            fpsTextField.setText("1000");
+            String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
+            String outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
+
+            String[] fullCommand = {"cmd.exe", "/c", "ffmpeg", "-i", inputFilePathArgument, outputFolderArgument};
+//            System.out.print("\n");
+//            for (String arg : fullCommand) {
+//                System.out.print(arg + " ");
+//            }
+
+            executeMP4ToPNGSequence(fullCommand, this.FFmpegPath);
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -317,5 +352,9 @@ public class UserInterface {
         // Part 5 - Deploying the UI
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) {
+        ConsoleBridge consoleBridge = new ConsoleBridge(inputCommand, FFmpegLocation);
     }
 }

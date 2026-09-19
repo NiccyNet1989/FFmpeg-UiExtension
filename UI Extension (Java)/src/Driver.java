@@ -3,9 +3,10 @@ import java.nio.file.Paths;
 
 public class Driver {
     public static void main(String[] args) {
-        UserInterface ui = new UserInterface();
-//        Path FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent();
-//        FFmpegPath = FFmpegPath.resolve("bin");
+        Path FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent();
+        FFmpegPath = FFmpegPath.resolve("bin");
+
+        UserInterface ui = new UserInterface(FFmpegPath);
 //        System.out.print(FFmpegPath);
 
 //        Path projectRoot = Paths.get(System.getProperty("user.dir")).getParent();
@@ -18,8 +19,5 @@ public class Driver {
 //        String[] FFmpegCommand = {"cmd.exe", "/c", "ffmpeg", "-i", "../Test Gif.mp4", "../Test Gif/Test Gif_%04d.png"};
 
 //        String[] commandInput = {"cmd.exe", "/c", "mkdir test"};
-//        ConsoleBridge consoleBridge = new ConsoleBridge(FFmpegCommand, FFmpegPath);
-
-
     }
 }

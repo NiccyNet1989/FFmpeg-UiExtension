@@ -1,7 +1,4 @@
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -67,15 +64,23 @@ public class ConsoleBridge {
         try {
             this.process = processBuilder.start();
 
+
             this.outputStream = process.getOutputStream();
             this.inputStream = process.getInputStream();
             this.stderror = process.getErrorStream();
 
-            if (process.waitFor() == 0) {
-                outputStream.flush();
-                outputStream.close();
-                process.destroy();
-            }
+            System.out.print("Successfully created PNG Sequence");
+
+            process.waitFor(5, TimeUnit.SECONDS);
+            outputStream.flush();
+            outputStream.close();
+            process.destroy();
+
+//            if (process.waitFor() == 0) {
+//                outputStream.flush();
+//                outputStream.close();
+//                process.destroy();
+//            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
