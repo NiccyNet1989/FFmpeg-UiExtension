@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,8 +19,11 @@ import javax.swing.undo.UndoManager;
 
 public class UserInterface {
     JFrame frame;
+    Path FFmpegPath;
 
-    public UserInterface() {
+    public UserInterface(Path FFmpegPath) {
+        this.FFmpegPath = FFmpegPath;
+
         //==================================================
         // Part 1 - Base Frame Development
         // Outputs the creation of the UI to the user via the console
@@ -31,8 +35,43 @@ public class UserInterface {
         frame.getContentPane().setBackground(Color.WHITE);
         GridBagConstraints constraints = new GridBagConstraints();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(new Dimension(600, 400));
+        frame.setSize(new Dimension(600, 450));
         frame.setResizable(false);
+
+        // Adding a menu bar
+        JMenuBar menuBar = new JMenuBar();
+        frame.setJMenuBar(menuBar);
+
+        JMenu fileMenu = new JMenu("File");
+        JMenu editMenu = new JMenu("Edit");
+        JMenu operationsMenu = new JMenu("Operations");
+        JMenu helpMenu = new JMenu("Help");
+        JMenu exitMenu = new JMenu("Exit");
+
+        menuBar.add(fileMenu);
+        menuBar.add(editMenu);
+        menuBar.add(operationsMenu);
+        menuBar.add(helpMenu);
+        menuBar.add(exitMenu);
+
+        JMenuItem fileOpen = new JMenuItem("Open");
+        fileMenu.add(fileOpen);
+
+        JMenuItem editClear = new JMenuItem("Clear");
+        editMenu.add(editClear);
+
+        JMenuItem operationsMP4toPNGSequence = new JMenuItem("MP4 to PNG Sequence");
+        JMenuItem operationsPNGSequencetoMP4 = new JMenuItem("PNG Sequence to MP4");
+        operationsMenu.add(operationsMP4toPNGSequence);
+        operationsMenu.add(operationsPNGSequencetoMP4);
+
+        JMenuItem helpAbout = new JMenuItem("About");
+        JMenuItem helpCredits = new JMenuItem("Credits");
+        helpMenu.add(helpAbout);
+        helpMenu.add(helpCredits);
+
+        JMenuItem exitClose = new JMenuItem("Close");
+        exitMenu.add(exitClose);
 
 
         // Defining the three panels main panels where the components will reside
@@ -83,7 +122,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 0, 50, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         frame.add(panel2, constraints);
 
@@ -92,8 +131,9 @@ public class UserInterface {
         constraints.gridy = 2;
         constraints.gridwidth = 1;  // Scale of component
         constraints.gridheight = 2;
-        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
-        constraints.weighty = 0.1;
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.weightx = 1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
@@ -131,18 +171,18 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(filePathTextField, constraints);
 
-        constraints = new GridBagConstraints();
-        constraints.gridx = 1;      // Position in grid
-        constraints.gridy = 0;
-        constraints.gridwidth = 1;  // Scale of component
-        constraints.gridheight = 1;
-        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
-        constraints.weighty = 0.1;
-        constraints.ipadx = 0;      // Attempts to manually resize the component
-        constraints.ipady = 0;
-        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
-        constraints.anchor = GridBagConstraints.LINE_START;
-        panel1.add(new JPanel(), constraints);
+//        constraints = new GridBagConstraints();
+//        constraints.gridx = 1;      // Position in grid
+//        constraints.gridy = 0;
+//        constraints.gridwidth = 1;  // Scale of component
+//        constraints.gridheight = 1;
+//        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+//        constraints.weighty = 0.1;
+//        constraints.ipadx = 0;      // Attempts to manually resize the component
+//        constraints.ipady = 0;
+//        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+//        constraints.anchor = GridBagConstraints.LINE_START;
+//        panel1.add(new JPanel(), constraints);
 
         JLabel frameSpinnerLabel = new JLabel("Frames per PNG Extract (Max 60)");
         constraints = new GridBagConstraints();
@@ -154,7 +194,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 110, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 210, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinnerLabel, constraints);
 
@@ -169,7 +209,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 110, 50, 0);
+        constraints.insets = new Insets(0, 210, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinner, constraints);
 
@@ -177,13 +217,13 @@ public class UserInterface {
         //==================================================
         // Part 3 - Panel 2
 
-        JLabel outputFolderLabel = new JLabel("Output Folder Name");
+        JLabel outputFolderLabel = new JLabel("Output Folder");
         constraints = new GridBagConstraints();
-        constraints.gridx = 0;          // X Position in grid
-        constraints.gridy = 0;          // Y Position in grid
-        constraints.gridwidth = 1;      // X scale of component
-        constraints.gridheight = 1;     // Y scale of component
-        constraints.weightx = 0.1;      // Adjust
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;
         constraints.weighty = 0.1;
         constraints.ipadx = 0;
         constraints.ipady = 0;
@@ -204,19 +244,20 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(outputFolderTextField, constraints);
 
-        constraints = new GridBagConstraints();
-        constraints.gridx = 2;      // Position in grid
-        constraints.gridy = 0;
-        constraints.gridwidth = 1;  // Scale of component
-        constraints.gridheight = 1;
-        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
-        constraints.weighty = 0.1;
-        constraints.ipadx = 0;      // Attempts to manually resize the component
-        constraints.ipady = 0;
-        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
-        constraints.anchor = GridBagConstraints.LINE_START;
-        panel2.add(new JPanel(), constraints);
+//        constraints = new GridBagConstraints();
+//        constraints.gridx = 1;      // Position in grid
+//        constraints.gridy = 0;
+//        constraints.gridwidth = 1;  // Scale of component
+//        constraints.gridheight = 1;
+//        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+//        constraints.weighty = 0.1;
+//        constraints.ipadx = 0;      // Attempts to manually resize the component
+//        constraints.ipady = 0;
+//        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+//        constraints.anchor = GridBagConstraints.LINE_START;
+//        panel2.add(new JPanel(), constraints);
 
+        JLabel fpsLabel = new JLabel("Video FPS");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -226,9 +267,26 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
-        constraints.anchor = GridBagConstraints.LINE_START;
-        panel2.add(new JPanel(), constraints);
+        constraints.insets = new Insets(10, 50, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        panel2.add(fpsLabel, constraints);
+
+        JTextField fpsTextField = new JTextField();
+        fpsTextField.setPreferredSize(new Dimension(40, 25));
+        fpsTextField.setEnabled(false);
+        fpsTextField.setDisabledTextColor(Color.BLACK);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 2;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 50, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        panel2.add(fpsTextField, constraints);
 
         //==================================================
         // Part 4 - Panel 3
@@ -236,6 +294,7 @@ public class UserInterface {
         JTextField consoleOutput = new JTextField();
         consoleOutput.setPreferredSize(new Dimension(500, 80));
         consoleOutput.setEnabled(false);
+        consoleOutput.setDisabledTextColor(Color.BLACK);
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
         constraints.gridy = 0;
@@ -250,6 +309,18 @@ public class UserInterface {
         panel3.add(consoleOutput, constraints);
 
         JButton confirmButton = new JButton("Confirm");
+        confirmButton.addActionListener(e -> {
+            String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
+            String outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
+
+            String[] fullCommand = {"cmd.exe", "/c", "ffmpeg", "-i", inputFilePathArgument, outputFolderArgument};
+//            System.out.print("\n");
+//            for (String arg : fullCommand) {
+//                System.out.print(arg + " ");
+//            }
+
+            executeMP4ToPNGSequence(fullCommand, this.FFmpegPath);
+        });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
         constraints.gridy = 1;
@@ -281,5 +352,9 @@ public class UserInterface {
         // Part 5 - Deploying the UI
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) {
+        ConsoleBridge consoleBridge = new ConsoleBridge(inputCommand, FFmpegLocation);
     }
 }
