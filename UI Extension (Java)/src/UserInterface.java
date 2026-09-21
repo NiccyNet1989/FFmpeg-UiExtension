@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,6 +21,7 @@ import javax.swing.undo.UndoManager;
 public class UserInterface {
     JFrame frame;
     Path FFmpegPath;
+    ConsoleBridge consoleBridge = new ConsoleBridge(Paths.get(System.getProperty("user.dir")).getParent());  // Initialize a ConsoleBridge at the project's root
 
     public UserInterface(Path FFmpegPath) {
         this.FFmpegPath = FFmpegPath;
@@ -194,7 +196,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 210, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 280, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinnerLabel, constraints);
 
@@ -209,7 +211,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 210, 50, 0);
+        constraints.insets = new Insets(0, 280, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinner, constraints);
 
@@ -267,7 +269,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 50, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 120, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(fpsLabel, constraints);
 
@@ -284,7 +286,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 50, 50, 0);
+        constraints.insets = new Insets(0, 120, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(fpsTextField, constraints);
 
@@ -354,7 +356,16 @@ public class UserInterface {
         frame.setVisible(true);
     }
 
+
+    /*The below command is designed to handle the user's input into the filePath textfield component
+    * It is designed to identify either a file path, the name of a file, or the name of a file including the .mp4 extension*/
+    public void parseFileInput(){
+
+    }
     public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) {
-        ConsoleBridge consoleBridge = new ConsoleBridge(inputCommand, FFmpegLocation);
+        this.consoleBridge.changeCommand(inputCommand);
+        this.consoleBridge.changeDirectory(FFmpegLocation);
+
+        consoleBridge.executeCommand();
     }
 }
