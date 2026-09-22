@@ -1,23 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.function.Consumer;
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.undo.CannotRedoException;
-import javax.swing.undo.CannotUndoException;
-import javax.swing.undo.UndoManager;
 
 public class UserInterface {
     JFrame frame;
@@ -28,7 +13,7 @@ public class UserInterface {
 
 
     private JTextField fpsTextField;
-    private JTextField consoleOutput;
+    private JTextArea consoleOutputTextArea;
 
     public UserInterface(Path initialDirectory) {
         // The UI keeps track of the application's root, and the location of FFmpeg. This may be used for reference.
@@ -305,10 +290,14 @@ public class UserInterface {
         //==================================================
         // Part 4 - Panel 3
 
-        consoleOutput = new JTextField();
-        consoleOutput.setPreferredSize(new Dimension(500, 80));
-        consoleOutput.setEnabled(false);
-        consoleOutput.setDisabledTextColor(Color.BLACK);
+        consoleOutputTextArea = new JTextArea();
+//        consoleOutputTextArea.setPreferredSize(new Dimension(500, 80));
+        consoleOutputTextArea.setEditable(false);
+        consoleOutputTextArea.setLineWrap(true);
+        consoleOutputTextArea.setWrapStyleWord(true);
+        consoleOutputTextArea.setDisabledTextColor(Color.BLACK);
+        JScrollPane consoleOutputScrollPane = new JScrollPane(consoleOutputTextArea);
+        consoleOutputScrollPane.setPreferredSize(new Dimension(500, 80));
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
         constraints.gridy = 0;
@@ -320,7 +309,7 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.PAGE_START;
-        panel3.add(consoleOutput, constraints);
+        panel3.add(consoleOutputScrollPane, constraints);
 
         JButton confirmButton = new JButton("Confirm");
         confirmButton.addActionListener(e -> {
@@ -385,8 +374,9 @@ public class UserInterface {
         this.consoleBridge.changeDirectory(FFmpegLocation);
 
         consoleBridge.executeCommand(consoleBridgeOutput -> {
-            System.out.print(consoleBridgeOutput);
+            SwingUtilities.invokeLater(() -> {
+                consoleOutputTextArea.append("\n" + consoleBridgeOutput);
+            });
         });
-
     }
 }
