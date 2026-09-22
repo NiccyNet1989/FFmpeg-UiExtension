@@ -6,13 +6,13 @@ public class Driver {
         Path FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent();
         FFmpegPath = FFmpegPath.resolve("bin");
 
+        Path applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
+        System.out.print(applicationRoot);
+
         UserInterface ui = new UserInterface(FFmpegPath);
 //        System.out.print(FFmpegPath);
 
-//        Path projectRoot = Paths.get(System.getProperty("user.dir")).getParent();
-//        System.out.print(projectRoot);
-
-//        String fileName = "\"Test Gif\"";
+//        String fileName = "\"Test Gif\"";Test mp4.mp4Test mp4.mp4Test mp4.mp4
 //        String mkdirCommand = "mkdir " + fileName;
 //        System.out.print(mkdirCommand);
 

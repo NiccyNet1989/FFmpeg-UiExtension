@@ -3,9 +3,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.CaretEvent;
@@ -19,10 +21,22 @@ import javax.swing.undo.UndoManager;
 
 public class UserInterface {
     JFrame frame;
+    Path applicationRoot;
     Path FFmpegPath;
+    String FFMpegExecutablePath;
+    ConsoleBridge consoleBridge;
 
-    public UserInterface(Path FFmpegPath) {
-        this.FFmpegPath = FFmpegPath;
+
+    private JTextField fpsTextField;
+    private JTextField consoleOutput;
+
+    public UserInterface(Path initialDirectory) {
+        // The UI keeps track of the application's root, and the location of FFmpeg. This may be used for reference.
+        this.applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
+        this.FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent().resolve("bin");
+        this.FFMpegExecutablePath = "\"" + Paths.get(System.getProperty("user.dir")).getParent().resolve("bin").resolve("ffmpeg.exe").toString() + "\"";
+
+        this.consoleBridge = new ConsoleBridge(initialDirectory);
 
         //==================================================
         // Part 1 - Base Frame Development
@@ -194,7 +208,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 210, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 280, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinnerLabel, constraints);
 
@@ -209,7 +223,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 210, 50, 0);
+        constraints.insets = new Insets(0, 280, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinner, constraints);
 
@@ -267,11 +281,11 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 50, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 120, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(fpsLabel, constraints);
 
-        JTextField fpsTextField = new JTextField();
+        fpsTextField = new JTextField();
         fpsTextField.setPreferredSize(new Dimension(40, 25));
         fpsTextField.setEnabled(false);
         fpsTextField.setDisabledTextColor(Color.BLACK);
@@ -284,14 +298,14 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 50, 50, 0);
+        constraints.insets = new Insets(0, 120, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(fpsTextField, constraints);
 
         //==================================================
         // Part 4 - Panel 3
 
-        JTextField consoleOutput = new JTextField();
+        consoleOutput = new JTextField();
         consoleOutput.setPreferredSize(new Dimension(500, 80));
         consoleOutput.setEnabled(false);
         consoleOutput.setDisabledTextColor(Color.BLACK);
@@ -313,13 +327,17 @@ public class UserInterface {
             String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
             String outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
 
-            String[] fullCommand = {"cmd.exe", "/c", "ffmpeg", "-i", inputFilePathArgument, outputFolderArgument};
+            String[] fullCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument, outputFolderArgument};
 //            System.out.print("\n");
 //            for (String arg : fullCommand) {
 //                System.out.print(arg + " ");
 //            }
 
-            executeMP4ToPNGSequence(fullCommand, this.FFmpegPath);
+            try {
+                executeMP4ToPNGSequence(fullCommand, this.FFmpegPath);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -354,7 +372,21 @@ public class UserInterface {
         frame.setVisible(true);
     }
 
-    public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) {
-        ConsoleBridge consoleBridge = new ConsoleBridge(inputCommand, FFmpegLocation);
+
+    /*The below command is designed to handle the user's input into the filePath textfield component
+     * It is designed to identify either a file path, the name of a file, or the name of a file including the .mp4 extension
+     * With the use of this command, the program should become more robust to user-input*/
+    public void parseFileInput() {
+
+    }
+
+    public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) throws IOException {
+        this.consoleBridge.changeCommand(inputCommand);
+        this.consoleBridge.changeDirectory(FFmpegLocation);
+
+        consoleBridge.executeCommand(consoleBridgeOutput -> {
+            System.out.print(consoleBridgeOutput);
+        });
+
     }
 }
