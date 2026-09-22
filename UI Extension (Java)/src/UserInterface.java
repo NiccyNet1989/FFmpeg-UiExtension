@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.CaretEvent;
@@ -374,7 +375,17 @@ public class UserInterface {
     public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) {
         this.consoleBridge.changeCommand(inputCommand);
         this.consoleBridge.changeDirectory(FFmpegLocation);
+        Consumer<String> callbackReference = new Consumer<String>() {
+            @Override
+            public void accept(String s) {
 
-        consoleBridge.executeCommand();
+            }
+        }
+
+        try {
+            consoleBridge.executeCommand();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

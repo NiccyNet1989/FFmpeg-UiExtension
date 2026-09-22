@@ -3,6 +3,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 //This class is designed to bridge input between the Java program and the console
 public class ConsoleBridge {
@@ -13,7 +14,6 @@ public class ConsoleBridge {
     Process process;
     BufferedOutputStream outputStream;
     BufferedInputStream inputStream;
-    BufferedInputStream stderror;
 
 
     public ConsoleBridge(Path inputtedDirectory) {
@@ -23,7 +23,6 @@ public class ConsoleBridge {
         this.process = null;
         this.outputStream = null;
         this.inputStream = null;
-        this.stderror = null;
     }
 
 
@@ -38,12 +37,12 @@ public class ConsoleBridge {
         processBuilder.command(this.currentCommand);
 
         try {
+            processBuilder.redirectErrorStream(true);
             this.process = processBuilder.start();
 
 
             this.outputStream = new BufferedOutputStream(process.getOutputStream());
             this.inputStream = new BufferedInputStream(process.getInputStream());
-            this.stderror = new BufferedInputStream(process.getErrorStream());
 
             System.out.print("Successfully created PNG Sequence");
 
@@ -76,35 +75,56 @@ public class ConsoleBridge {
         return true;
     }
 
-    public boolean executeCommand() {
+    public boolean executeCommand(Consumer<String> callbackReference) throws IOException {
         if (this.currentCommand.equals(new String[]{""})) {
             System.out.print("\nError: No current command\n");
             return false;
         }
 
 
-        try {
-            terminateCurrentProcess();  // Starts by deleting the previous process
+        terminateCurrentProcess();  // Starts by deleting the previous process
 
-            this.process = processBuilder.start();
+        Thread currentThread = new Thread(() -> {
+            try {
+                processBuilder.redirectErrorStream(true);
+                this.process = processBuilder.start();
 
-            this.outputStream = new BufferedOutputStream(process.getOutputStream());
-            this.inputStream = new BufferedInputStream(process.getInputStream());
-            this.stderror = new BufferedInputStream(process.getErrorStream());
+                this.outputStream = new BufferedOutputStream(process.getOutputStream());
+                this.inputStream = new BufferedInputStream(process.getInputStream());
 
-            System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
-            for (int i = 1; i < currentCommand.length; i++) {
-                System.out.print(" " + currentCommand[i]);
+                System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
+                for (int i = 1; i < currentCommand.length; i++) {
+                    System.out.print(" " + currentCommand[i]);
+                }
+                System.out.print("\nAt directory: \n\t" + this.directory + "\n");
+
+                try {
+                    BufferedReader outputReader = new BufferedReader(new InputStreamReader(this.inputStream));
+                    String readerContent;
+                    while ((readerContent = outputReader.readLine()) != null) {
+                        callbackReference.accept(readerContent);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                int exitCode = process.waitFor();
+                if (exitCode == 0) {
+                    System.out.print("\nSuccessfully completed operation");
+                } else {
+                    System.out.print("\nError: Process wait returned non-zero exit code");
+                }
+
+                this.terminateCurrentProcess();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-            System.out.print("\nAt directory: \n\t" + this.directory + "\n");
+        });
 
-            process.waitFor(5, TimeUnit.SECONDS);
-            this.terminateCurrentProcess();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        currentThread.start();
+
         return false;
     }
 
@@ -118,7 +138,6 @@ public class ConsoleBridge {
         process.destroy();
 
         this.inputStream = null;
-        this.stderror = null;
 
         return true;
     }
