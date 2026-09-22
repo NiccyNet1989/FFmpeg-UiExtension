@@ -26,6 +26,10 @@ public class UserInterface {
     String FFMpegExecutablePath;
     ConsoleBridge consoleBridge;
 
+
+    private JTextField fpsTextField;
+    private JTextField consoleOutput;
+
     public UserInterface(Path initialDirectory) {
         // The UI keeps track of the application's root, and the location of FFmpeg. This may be used for reference.
         this.applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
@@ -281,7 +285,7 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(fpsLabel, constraints);
 
-        JTextField fpsTextField = new JTextField();
+        fpsTextField = new JTextField();
         fpsTextField.setPreferredSize(new Dimension(40, 25));
         fpsTextField.setEnabled(false);
         fpsTextField.setDisabledTextColor(Color.BLACK);
@@ -301,7 +305,7 @@ public class UserInterface {
         //==================================================
         // Part 4 - Panel 3
 
-        JTextField consoleOutput = new JTextField();
+        consoleOutput = new JTextField();
         consoleOutput.setPreferredSize(new Dimension(500, 80));
         consoleOutput.setEnabled(false);
         consoleOutput.setDisabledTextColor(Color.BLACK);
@@ -329,7 +333,11 @@ public class UserInterface {
 //                System.out.print(arg + " ");
 //            }
 
-            executeMP4ToPNGSequence(fullCommand, this.FFmpegPath);
+            try {
+                executeMP4ToPNGSequence(fullCommand, this.FFmpegPath);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -372,20 +380,13 @@ public class UserInterface {
 
     }
 
-    public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) {
+    public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) throws IOException {
         this.consoleBridge.changeCommand(inputCommand);
         this.consoleBridge.changeDirectory(FFmpegLocation);
-        Consumer<String> callbackReference = new Consumer<String>() {
-            @Override
-            public void accept(String s) {
 
-            }
-        }
+        consoleBridge.executeCommand(consoleBridgeOutput -> {
+            System.out.print(consoleBridgeOutput);
+        });
 
-        try {
-            consoleBridge.executeCommand();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
