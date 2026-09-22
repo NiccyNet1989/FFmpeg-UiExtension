@@ -20,11 +20,18 @@ import javax.swing.undo.UndoManager;
 
 public class UserInterface {
     JFrame frame;
+    Path applicationRoot;
     Path FFmpegPath;
-    ConsoleBridge consoleBridge = new ConsoleBridge(Paths.get(System.getProperty("user.dir")).getParent());  // Initialize a ConsoleBridge at the project's root
+    String FFMpegExecutablePath;
+    ConsoleBridge consoleBridge;
 
-    public UserInterface(Path FFmpegPath) {
-        this.FFmpegPath = FFmpegPath;
+    public UserInterface(Path initialDirectory) {
+        // The UI keeps track of the application's root, and the location of FFmpeg. This may be used for reference.
+        this.applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
+        this.FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent().resolve("bin");
+        this.FFMpegExecutablePath = "\"" + Paths.get(System.getProperty("user.dir")).getParent().resolve("bin").resolve("ffmpeg.exe").toString() + "\"";
+
+        this.consoleBridge = new ConsoleBridge(initialDirectory);
 
         //==================================================
         // Part 1 - Base Frame Development
@@ -315,7 +322,7 @@ public class UserInterface {
             String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
             String outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
 
-            String[] fullCommand = {"cmd.exe", "/c", "ffmpeg", "-i", inputFilePathArgument, outputFolderArgument};
+            String[] fullCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument, outputFolderArgument};
 //            System.out.print("\n");
 //            for (String arg : fullCommand) {
 //                System.out.print(arg + " ");
@@ -358,10 +365,11 @@ public class UserInterface {
 
 
     /*The below command is designed to handle the user's input into the filePath textfield component
-    * It is designed to identify either a file path, the name of a file, or the name of a file including the .mp4 extension*/
-    public void parseFileInput(){
+     * It is designed to identify either a file path, the name of a file, or the name of a file including the .mp4 extension*/
+    public void parseFileInput() {
 
     }
+
     public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) {
         this.consoleBridge.changeCommand(inputCommand);
         this.consoleBridge.changeDirectory(FFmpegLocation);
