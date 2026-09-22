@@ -365,7 +365,8 @@ public class UserInterface {
 
 
     /*The below command is designed to handle the user's input into the filePath textfield component
-     * It is designed to identify either a file path, the name of a file, or the name of a file including the .mp4 extension*/
+     * It is designed to identify either a file path, the name of a file, or the name of a file including the .mp4 extension
+     * With the use of this command, the program should become more robust to user-input*/
     public void parseFileInput() {
 
     }

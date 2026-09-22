@@ -11,9 +11,9 @@ public class ConsoleBridge {
     File directory;
     ProcessBuilder processBuilder;
     Process process;
-    OutputStream outputStream;
-    InputStream inputStream;
-    InputStream stderror;
+    BufferedOutputStream outputStream;
+    BufferedInputStream inputStream;
+    BufferedInputStream stderror;
 
 
     public ConsoleBridge(Path inputtedDirectory) {
@@ -41,9 +41,9 @@ public class ConsoleBridge {
             this.process = processBuilder.start();
 
 
-            this.outputStream = process.getOutputStream();
-            this.inputStream = process.getInputStream();
-            this.stderror = process.getErrorStream();
+            this.outputStream = new BufferedOutputStream(process.getOutputStream());
+            this.inputStream = new BufferedInputStream(process.getInputStream());
+            this.stderror = new BufferedInputStream(process.getErrorStream());
 
             System.out.print("Successfully created PNG Sequence");
 
@@ -88,9 +88,9 @@ public class ConsoleBridge {
 
             this.process = processBuilder.start();
 
-            this.outputStream = process.getOutputStream();
-            this.inputStream = process.getInputStream();
-            this.stderror = process.getErrorStream();
+            this.outputStream = new BufferedOutputStream(process.getOutputStream());
+            this.inputStream = new BufferedInputStream(process.getInputStream());
+            this.stderror = new BufferedInputStream(process.getErrorStream());
 
             System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
             for (int i = 1; i < currentCommand.length; i++) {
