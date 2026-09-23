@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.*;
 import java.nio.file.Path;
@@ -11,8 +12,11 @@ public class UserInterface {
     String FFMpegExecutablePath;
     ConsoleBridge consoleBridge;
 
+    JFileChooser fileChooser;
+    ImageIcon fileIcon;
 
-    private JTextField fpsTextField;
+
+    private JTextField estimatedFpsTextField;
     private JTextArea consoleOutputTextArea;
 
     public UserInterface(Path initialDirectory) {
@@ -20,8 +24,12 @@ public class UserInterface {
         this.applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
         this.FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent().resolve("bin");
         this.FFMpegExecutablePath = "\"" + Paths.get(System.getProperty("user.dir")).getParent().resolve("bin").resolve("ffmpeg.exe").toString() + "\"";
+        this.fileIcon = new ImageIcon(Paths.get(System.getProperty("user.dir")).resolve("Folder Icon.png").toString());
 
         this.consoleBridge = new ConsoleBridge(initialDirectory);
+        this.fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("mp4 files", "mp4");
+        fileChooser.setFileFilter(filter);
 
         //==================================================
         // Part 1 - Base Frame Development
@@ -158,7 +166,7 @@ public class UserInterface {
         panel1.add(filePathLabel, constraints);
 
         JTextField filePathTextField = new JTextField();
-        filePathTextField.setPreferredSize(new Dimension(300, 25));
+        filePathTextField.setPreferredSize(new Dimension(280, 25));
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -169,6 +177,21 @@ public class UserInterface {
         constraints.insets = new Insets(0, 10, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(filePathTextField, constraints);
+
+        JButton filePathFolderButton = new JButton();
+        filePathFolderButton.setPreferredSize(new Dimension(24, 24));
+        filePathFolderButton.setIcon(fileIcon);
+        filePathFolderButton.setBackground(Color.WHITE);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 3;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.5;
+        constraints.weighty = 0.1;
+        constraints.insets = new Insets(0, 289, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        panel1.add(filePathFolderButton, constraints);
 
 //        constraints = new GridBagConstraints();
 //        constraints.gridx = 1;      // Position in grid
@@ -183,7 +206,7 @@ public class UserInterface {
 //        constraints.anchor = GridBagConstraints.LINE_START;
 //        panel1.add(new JPanel(), constraints);
 
-        JLabel frameSpinnerLabel = new JLabel("Frames per PNG Extract (Max 60)");
+        JLabel frameSpinnerLabel = new JLabel("Desired FPS (Max 60)");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -193,12 +216,13 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 280, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 212, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinnerLabel, constraints);
 
         SpinnerModel numberSpinnerModel = new SpinnerNumberModel(1, 1, 60, 1); // (Initial, min, max, step)
         JSpinner frameSpinner = new JSpinner(numberSpinnerModel);
+        frameSpinner.setEnabled(false);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 1;
@@ -208,9 +232,34 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 280, 50, 0);
+        constraints.insets = new Insets(0, 242, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel1.add(frameSpinner, constraints);
+
+        JCheckBox desiredFPSCheckBox = new JCheckBox();
+        desiredFPSCheckBox.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> {
+                if (desiredFPSCheckBox.isSelected()) {
+                    frameSpinner.setEnabled(true);
+                } else {
+                    frameSpinner.setEnabled(false);
+                }
+            });
+
+        });
+        desiredFPSCheckBox.setBackground(Color.WHITE);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 2;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 210, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        panel1.add(desiredFPSCheckBox, constraints);
 
 
         //==================================================
@@ -231,7 +280,7 @@ public class UserInterface {
         panel2.add(outputFolderLabel, constraints);
 
         JTextField outputFolderTextField = new JTextField();
-        outputFolderTextField.setPreferredSize(new Dimension(300, 25));
+        outputFolderTextField.setPreferredSize(new Dimension(280, 25));
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -242,6 +291,21 @@ public class UserInterface {
         constraints.insets = new Insets(0, 10, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(outputFolderTextField, constraints);
+
+        JButton outputPathFolderButton = new JButton();
+        outputPathFolderButton.setPreferredSize(new Dimension(24, 24));
+        outputPathFolderButton.setIcon(fileIcon);
+        outputPathFolderButton.setBackground(Color.WHITE);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 3;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.5;
+        constraints.weighty = 0.1;
+        constraints.insets = new Insets(0, 289, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        panel2.add(outputPathFolderButton, constraints);
 
 //        constraints = new GridBagConstraints();
 //        constraints.gridx = 1;      // Position in grid
@@ -256,7 +320,7 @@ public class UserInterface {
 //        constraints.anchor = GridBagConstraints.LINE_START;
 //        panel2.add(new JPanel(), constraints);
 
-        JLabel fpsLabel = new JLabel("Video FPS");
+        JLabel fpsLabel = new JLabel("Estimated FPS");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -266,14 +330,14 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 120, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 146, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         panel2.add(fpsLabel, constraints);
 
-        fpsTextField = new JTextField();
-        fpsTextField.setPreferredSize(new Dimension(40, 25));
-        fpsTextField.setEnabled(false);
-        fpsTextField.setDisabledTextColor(Color.BLACK);
+        estimatedFpsTextField = new JTextField();
+        estimatedFpsTextField.setPreferredSize(new Dimension(40, 25));
+        estimatedFpsTextField.setEnabled(false);
+        estimatedFpsTextField.setDisabledTextColor(Color.BLACK);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 1;
@@ -283,9 +347,9 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 120, 50, 0);
+        constraints.insets = new Insets(0, 146, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(fpsTextField, constraints);
+        panel2.add(estimatedFpsTextField, constraints);
 
         //==================================================
         // Part 4 - Panel 3
@@ -316,17 +380,30 @@ public class UserInterface {
             String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
             String outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
 
-            String[] fullCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument, outputFolderArgument};
+            String[] fullCommand = {""};
+            if (desiredFPSCheckBox.isSelected()) {
+                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, "-vf", "\"fps=" + frameSpinner.getValue().toString() + "\"", outputFolderArgument};
+            } else {
+                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, outputFolderArgument};
+            }
 //            System.out.print("\n");
 //            for (String arg : fullCommand) {
 //                System.out.print(arg + " ");
 //            }
 
             try {
-                executeMP4ToPNGSequence(fullCommand, this.FFmpegPath);
+                executeMP4ToPNGSequenceCommand(fullCommand, this.FFmpegPath);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
+
+
+//            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
+//            try {
+//                executeGetMP4FramerateCommand(getFPSCommand);
+//            } catch (IOException ex) {
+//                throw new RuntimeException(ex);
+//            }
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -342,6 +419,16 @@ public class UserInterface {
         panel3.add(confirmButton, constraints);
 
         JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(e -> {
+            String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
+            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
+
+            try {
+                executeGetMP4FramerateCommand(getFPSCommand);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
         constraints.gridy = 1;
@@ -369,13 +456,32 @@ public class UserInterface {
 
     }
 
-    public void executeMP4ToPNGSequence(String[] inputCommand, Path FFmpegLocation) throws IOException {
+    public void executeMP4ToPNGSequenceCommand(String[] inputCommand, Path FFmpegLocation) throws IOException {
         this.consoleBridge.changeCommand(inputCommand);
         this.consoleBridge.changeDirectory(FFmpegLocation);
 
-        consoleBridge.executeCommand(consoleBridgeOutput -> {
+        consoleBridge.executeCommand(false, consoleBridgeOutput -> {
             SwingUtilities.invokeLater(() -> {
                 consoleOutputTextArea.append("\n" + consoleBridgeOutput);
+            });
+        });
+    }
+
+    public void executeGetMP4FramerateCommand(String[] inputCommand) throws IOException {
+        ConsoleBridge tempConsoleBridge = new ConsoleBridge(this.FFmpegPath);
+
+        tempConsoleBridge.changeCommand(inputCommand);
+        tempConsoleBridge.changeDirectory(this.FFmpegPath);
+
+        tempConsoleBridge.executeCommand(false, consoleBridgeOutput -> {
+            SwingUtilities.invokeLater(() -> {
+//                estimatedFpsTextField.setText();
+                if (consoleBridgeOutput.contains("fps")) {
+                    String[] tempOutput = consoleBridgeOutput.toString().split("\\,+");
+                    for (String item : tempOutput) {
+                        System.out.print("\n\n" + item);
+                    }
+                }
             });
         });
     }

@@ -75,7 +75,7 @@ public class ConsoleBridge {
         return true;
     }
 
-    public boolean executeCommand(Consumer<String> callbackReference) throws IOException {
+    public boolean executeCommand(boolean printToConsole, Consumer<String> callbackReference) throws IOException {
         if (this.currentCommand.equals(new String[]{""})) {
             System.out.print("\nError: No current command\n");
             return false;
@@ -92,11 +92,13 @@ public class ConsoleBridge {
                 this.outputStream = new BufferedOutputStream(process.getOutputStream());
                 this.inputStream = new BufferedInputStream(process.getInputStream());
 
-                System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
-                for (int i = 1; i < currentCommand.length; i++) {
-                    System.out.print(" " + currentCommand[i]);
+                if(printToConsole){
+                    System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
+                    for (int i = 1; i < currentCommand.length; i++) {
+                        System.out.print(" " + currentCommand[i]);
+                    }
+                    System.out.print("\nAt directory: \n\t" + this.directory + "\n");
                 }
-                System.out.print("\nAt directory: \n\t" + this.directory + "\n");
 
                 try {
                     BufferedReader outputReader = new BufferedReader(new InputStreamReader(this.inputStream));
@@ -109,10 +111,13 @@ public class ConsoleBridge {
                 }
 
                 int exitCode = process.waitFor();
-                if (exitCode == 0) {
-                    System.out.print("\nSuccessfully completed operation");
-                } else {
-                    System.out.print("\nError: Process wait returned non-zero exit code");
+                if(printToConsole){
+                    if (exitCode == 0) {
+                        System.out.print("\nSuccessfully completed operation");
+                    } else {
+                        System.out.print("\nError: Process wait returned non-zero exit code");
+                    }
+
                 }
 
                 this.terminateCurrentProcess();
