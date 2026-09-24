@@ -398,12 +398,12 @@ public class UserInterface {
             }
 
 
-//            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
-//            try {
-//                executeGetMP4FramerateCommand(getFPSCommand);
-//            } catch (IOException ex) {
-//                throw new RuntimeException(ex);
-//            }
+            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
+            try {
+                executeGetMP4FramerateCommand(getFPSCommand);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -420,14 +420,7 @@ public class UserInterface {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
-            String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
-            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
 
-            try {
-                executeGetMP4FramerateCommand(getFPSCommand);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -479,7 +472,11 @@ public class UserInterface {
                 if (consoleBridgeOutput.contains("fps")) {
                     String[] tempOutput = consoleBridgeOutput.toString().split("\\,+");
                     for (String item : tempOutput) {
-                        System.out.print("\n\n" + item);
+                        if (item.contains("fps")) {
+                            SwingUtilities.invokeLater(() -> {
+                                this.estimatedFpsTextField.setText(item.replaceAll("[^0-9]", ""));
+                            });
+                        }
                     }
                 }
             });

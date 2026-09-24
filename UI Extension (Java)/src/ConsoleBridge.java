@@ -92,7 +92,7 @@ public class ConsoleBridge {
                 this.outputStream = new BufferedOutputStream(process.getOutputStream());
                 this.inputStream = new BufferedInputStream(process.getInputStream());
 
-                if(printToConsole){
+                if (printToConsole) {
                     System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
                     for (int i = 1; i < currentCommand.length; i++) {
                         System.out.print(" " + currentCommand[i]);
@@ -111,11 +111,11 @@ public class ConsoleBridge {
                 }
 
                 int exitCode = process.waitFor();
-                if(printToConsole){
+                if (printToConsole) {
                     if (exitCode == 0) {
                         System.out.print("\nSuccessfully completed operation");
                     } else {
-                        System.out.print("\nError: Process wait returned non-zero exit code");
+                        System.out.print("\nError: Process wait returned non-zero exit code " + exitCode);
                     }
 
                 }
