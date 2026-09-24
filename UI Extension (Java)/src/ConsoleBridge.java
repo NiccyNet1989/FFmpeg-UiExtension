@@ -117,7 +117,6 @@ public class ConsoleBridge {
                     } else {
                         System.out.print("\nError: Process wait returned non-zero exit code " + exitCode);
                     }
-
                 }
 
                 this.terminateCurrentProcess();
@@ -132,6 +131,7 @@ public class ConsoleBridge {
 
         return false;
     }
+
 
     public boolean terminateCurrentProcess() throws IOException {
         if (Objects.isNull(this.outputStream)) {

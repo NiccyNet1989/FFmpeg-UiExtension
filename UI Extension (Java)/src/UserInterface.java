@@ -382,21 +382,50 @@ public class UserInterface {
             String outputFolderArgument = "";
 
             /*Process input to the outputFolderTextField
-             * 1. Empty user input
-             * 2. Directory doesn't already exist*/
-            if (outputFolderTextField.getText().equals("")) {
-                // Check for empty outputFolderTextField
-                outputFolderArgument = "\"" + applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence") + "/" + filePathTextField.getText() + "_%04d.png\"";
-            } else {
-                //Check for directory doesn't yet exist
+             * Case 1. Empty user input
+             * Case 2. Directory doesn't already exist*/
+            UserInputTypes outputFolderInputCode = identifyUserInput(outputFolderTextField.getText(), false);
 
+            if (outputFolderInputCode == UserInputTypes.EMPTY) {
 
-                if (!Files.isDirectory(Paths.get(outputFolderTextField.getText()))) {
-                    String[] mkdirCommand = {"cmd.exe", "/c", "mkdir", outputFolderTextField.getText()};
-                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
-                } else {
-                    outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
+            }
+            if (outputFolderInputCode == UserInputTypes.PATH_NONEXISTENT) {
+                String[] mkdirCommand = {"cmd.exe", "/c", "mkdir", outputFolderTextField.getText()};
+                ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
+                tempConsoleBridge.changeCommand(mkdirCommand);
+                tempConsoleBridge.changeDirectory(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
+
+                try {
+                    tempConsoleBridge.executeCommand(true, consoleOutput -> {
+                    });
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
+
+
+                //NEEDS FIX
+                //When parseUserInput is completed, the line below must replace outputFolderTextField.getText() with parseUserInput(outputFolderTextField.getText())
+                //This is because, in its current state, the line below will attempt to create a file with "/" in its name, which is reserved by Windows OS at all times!
+                outputFolderArgument = "\"" + applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence") + "/" + outputFolderTextField.getText() + "_%04d.png\"";
+            }
+            if (outputFolderInputCode == UserInputTypes.PATH_EXISTING) {
+
+            }
+            if (outputFolderInputCode == UserInputTypes.NAME) {
+                String[] mkdirCommand = {"cmd.exe", "/c", "mkdir", outputFolderTextField.getText()};
+                ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
+                tempConsoleBridge.changeCommand(mkdirCommand);
+                tempConsoleBridge.changeDirectory(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
+
+                try {
+                    tempConsoleBridge.executeCommand(true, consoleOutput -> {
+                    });
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+
+                outputFolderArgument = "\"" + applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence") + "/" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
             }
 
 
@@ -440,7 +469,7 @@ public class UserInterface {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
-            identifyUserInput(filePathTextField.getText(), true);
+            identifyUserInput(outputFolderTextField.getText(), true);
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -459,27 +488,24 @@ public class UserInterface {
         // Part 5 - Deploying the UI
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-
-        userInputTypes input = userInputTypes.DEFAULT;
-        
     }
 
 
     /* The identifyUserInput method is designed to help identify the user's input into textField components
      * It returns values based on the enumerator userInputTypes
      * */
-    private enum userInputTypes {
+    private enum UserInputTypes {
         DEFAULT,
         EMPTY,
         NAME,
-        DIRECTORY_NONEXISTENT,
-        DIRECTORY_EXISTING
+        PATH_NONEXISTENT,
+        PATH_EXISTING
     }
 
-    public userInputTypes identifyUserInput(String userInput, boolean print) {
+    public UserInputTypes identifyUserInput(String userInput, boolean print) {
         if (userInput.equals("")) {
             if (print) System.out.print("\nUser input nothing");
-            return userInputTypes.EMPTY;
+            return UserInputTypes.EMPTY;
         }
 
         if (userInput.contains("\\")) {
@@ -487,34 +513,37 @@ public class UserInterface {
                 if (print) {
                     System.out.print("\nUser input a path to an existing file or directory");
                 }
-                return userInputTypes.DIRECTORY_EXISTING;
+                return UserInputTypes.PATH_EXISTING;
             } else {
                 if (print) {
                     System.out.print("\nUser input a path to a file or directory that doesn't exist");
                 }
-                return userInputTypes.DIRECTORY_NONEXISTENT;
+                return UserInputTypes.PATH_NONEXISTENT;
             }
         } else {
             if (print) {
                 System.out.print("\nUser input the name of a file or directory");
             }
-            return userInputTypes.NAME;
+            return UserInputTypes.NAME;
         }
     }
 
     /* The parseUserInput method is designed to process various forms of user file name input
      *
-     * For example, if the user inputs a file with an extension such as mp4, the method is designed to process it into a workable state
+     * For example, if the user inputs a file with an extension such as mp4, the method should return the name of the file without the extension
+     * Another example, if the user inputs a file path to a directory, the method should return the name of the directory
      * */
-    public void parseUserInput() {
+    public String parseUserInput() {
 
+
+        return "";
     }
 
     public void executeMP4ToPNGSequenceCommand(String[] inputCommand, Path FFmpegLocation) throws IOException {
         this.consoleBridge.changeCommand(inputCommand);
         this.consoleBridge.changeDirectory(FFmpegLocation);
 
-        consoleBridge.executeCommand(true, consoleBridgeOutput -> {
+        consoleBridge.executeCommand(false, consoleBridgeOutput -> {
             SwingUtilities.invokeLater(() -> {
                 consoleOutputTextArea.append("\n" + consoleBridgeOutput);
             });
