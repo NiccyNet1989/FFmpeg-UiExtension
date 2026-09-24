@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -378,7 +379,26 @@ public class UserInterface {
         JButton confirmButton = new JButton("Confirm");
         confirmButton.addActionListener(e -> {
             String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
-            String outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
+            String outputFolderArgument = "";
+
+            /*Process input to the outputFolderTextField
+             * 1. Empty user input
+             * 2. Directory doesn't already exist*/
+            if (outputFolderTextField.getText().equals("")) {
+                // Check for empty outputFolderTextField
+                outputFolderArgument = "\"" + applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence") + "/" + filePathTextField.getText() + "_%04d.png\"";
+            } else {
+                //Check for directory doesn't yet exist
+
+
+                if (!Files.isDirectory(Paths.get(outputFolderTextField.getText()))) {
+                    String[] mkdirCommand = {"cmd.exe", "/c", "mkdir", outputFolderTextField.getText()};
+                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
+                } else {
+                    outputFolderArgument = "\"../" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
+                }
+            }
+
 
             String[] fullCommand = {""};
             if (desiredFPSCheckBox.isSelected()) {
@@ -420,7 +440,7 @@ public class UserInterface {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
-
+            identifyUserInput(filePathTextField.getText(), true);
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -439,13 +459,54 @@ public class UserInterface {
         // Part 5 - Deploying the UI
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+
+        userInputTypes input = userInputTypes.DEFAULT;
+        
     }
 
 
-    /*The below command is designed to handle the user's input into the filePath textfield component
-     * It is designed to identify either a file path, the name of a file, or the name of a file including the .mp4 extension
-     * With the use of this command, the program should become more robust to user-input*/
-    public void parseFileInput() {
+    /* The identifyUserInput method is designed to help identify the user's input into textField components
+     * It returns values based on the enumerator userInputTypes
+     * */
+    private enum userInputTypes {
+        DEFAULT,
+        EMPTY,
+        NAME,
+        DIRECTORY_NONEXISTENT,
+        DIRECTORY_EXISTING
+    }
+
+    public userInputTypes identifyUserInput(String userInput, boolean print) {
+        if (userInput.equals("")) {
+            if (print) System.out.print("\nUser input nothing");
+            return userInputTypes.EMPTY;
+        }
+
+        if (userInput.contains("\\")) {
+            if (Files.isDirectory(Paths.get(userInput))) {
+                if (print) {
+                    System.out.print("\nUser input a path to an existing file or directory");
+                }
+                return userInputTypes.DIRECTORY_EXISTING;
+            } else {
+                if (print) {
+                    System.out.print("\nUser input a path to a file or directory that doesn't exist");
+                }
+                return userInputTypes.DIRECTORY_NONEXISTENT;
+            }
+        } else {
+            if (print) {
+                System.out.print("\nUser input the name of a file or directory");
+            }
+            return userInputTypes.NAME;
+        }
+    }
+
+    /* The parseUserInput method is designed to process various forms of user file name input
+     *
+     * For example, if the user inputs a file with an extension such as mp4, the method is designed to process it into a workable state
+     * */
+    public void parseUserInput() {
 
     }
 
@@ -453,7 +514,7 @@ public class UserInterface {
         this.consoleBridge.changeCommand(inputCommand);
         this.consoleBridge.changeDirectory(FFmpegLocation);
 
-        consoleBridge.executeCommand(false, consoleBridgeOutput -> {
+        consoleBridge.executeCommand(true, consoleBridgeOutput -> {
             SwingUtilities.invokeLater(() -> {
                 consoleOutputTextArea.append("\n" + consoleBridgeOutput);
             });

@@ -7,7 +7,6 @@ public class Driver {
         FFmpegPath = FFmpegPath.resolve("bin");
 
         Path applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
-        System.out.print(applicationRoot);
 
         UserInterface ui = new UserInterface(FFmpegPath);
 //        System.out.print(FFmpegPath);
