@@ -3,6 +3,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -405,13 +406,13 @@ public class UserInterface {
 
                 //NEEDS FIX
                 //When parseUserInput is completed, the line below must replace outputFolderTextField.getText() with parseUserInput(outputFolderTextField.getText())
-                //This is because, in its current state, the line below will attempt to create a file with "/" in its name, which is reserved by Windows OS at all times!
+                //This is because, in its current state, the line below will still attempt to create a file with invalid characters in its name, which are reserved by Windows OS at all times!
                 outputFolderArgument = "\"" + applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence") + "/" + outputFolderTextField.getText() + "_%04d.png\"";
             }
             if (outputFolderInputCode == UserInputTypes.PATH_EXISTING) {
 
             }
-            if (outputFolderInputCode == UserInputTypes.NAME) {
+            if (outputFolderInputCode == UserInputTypes.NAME_EXISTING) {
                 String[] mkdirCommand = {"cmd.exe", "/c", "mkdir", outputFolderTextField.getText()};
                 ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
                 tempConsoleBridge.changeCommand(mkdirCommand);
@@ -469,7 +470,9 @@ public class UserInterface {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
-            identifyUserInput(outputFolderTextField.getText(), true);
+            SwingUtilities.invokeLater(() -> {
+                identifyUserInput(outputFolderTextField.getText(), true);
+            });
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -497,9 +500,14 @@ public class UserInterface {
     private enum UserInputTypes {
         DEFAULT,
         EMPTY,
-        NAME,
+        NAME_NONEXISTENT,
+        NAME_EXISTING,
         PATH_NONEXISTENT,
-        PATH_EXISTING
+        PATH_EXISTING,
+        PATH_INVALID
+        // invalidChars = "/:*?\"<>|";
+        ,
+        PATH_NOT_ABSOLUTE
     }
 
     public UserInputTypes identifyUserInput(String userInput, boolean print) {
@@ -508,35 +516,80 @@ public class UserInterface {
             return UserInputTypes.EMPTY;
         }
 
-        if (userInput.contains("\\")) {
-            if (Files.isDirectory(Paths.get(userInput))) {
-                if (print) {
-                    System.out.print("\nUser input a path to an existing file or directory");
+
+        try {
+            // First check for invalid paths. If a path is invalid, the code redirects to the catch block
+            Path inputtedPath = Paths.get(userInput);
+            if (print) System.out.print("\nProcessing the following user input: " + inputtedPath);
+
+            // Second, check for basic names of files that aren't paths
+            if (!inputtedPath.isAbsolute() && inputtedPath.getParent() == null) {
+                if (!Files.exists(inputtedPath)) {
+                    Path defaultOutputFolderPath = applicationRoot.resolve("Default Output");
+                    Path defaultInputFolderPath = applicationRoot.resolve("Default Input");
+//                    System.out.print(("\n\n"+Files.exists(defaultOutputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput))+"\n\n"));
+//                    System.out.print("\n\n"+defaultOutputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput)+"\n\n");
+                    if (Files.exists(defaultOutputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput)) || Files.exists(defaultOutputFolderPath.resolve("PNG Sequence to MP4").resolve(userInput)) || Files.exists(defaultInputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput)) || Files.exists(defaultInputFolderPath.resolve("PNG Sequence to MP4").resolve(userInput))) {
+                        // If the user simply inputs the name of a file, the application will only check the default folders if it exists, since it cannot reasonably check everywhere else in the application or the device
+                        if (print)
+                            System.out.print("\nUser input the name of an existing file or directory found in the default folders");
+                        return UserInputTypes.NAME_EXISTING;
+                    } else {
+                        if (print)
+                            System.out.print("\nUser input the name of a file or directory that doesn't exist in the default folders");
+                        return UserInputTypes.NAME_NONEXISTENT;
+                    }
                 }
+            }
+
+            // Third, check if the input contains any form of path redirection
+            if (!inputtedPath.isAbsolute()) {
+                if (print) System.out.print("\nUser input a path that isn't absolute");
+                return UserInputTypes.PATH_NOT_ABSOLUTE;
+            }
+
+            // Fourth, check if the input is a path to an existing file or directory
+            if (Files.exists(inputtedPath)) {
+                if (print) System.out.print("\nUser input a path to an existing file or directory");
                 return UserInputTypes.PATH_EXISTING;
             } else {
-                if (print) {
-                    System.out.print("\nUser input a path to a file or directory that doesn't exist");
-                }
+                if (print) System.out.print("\nUser input a path to a file or directory that doesn't exist");
                 return UserInputTypes.PATH_NONEXISTENT;
             }
-        } else {
-            if (print) {
-                System.out.print("\nUser input the name of a file or directory");
-            }
-            return UserInputTypes.NAME;
+        } catch (InvalidPathException | NullPointerException e) {
+            if (print) System.out.print("\nUser input a file or directory name with invalid characters or syntax");
+            return UserInputTypes.PATH_INVALID;
         }
     }
 
-    /* The parseUserInput method is designed to process various forms of user file name input
+    /* The parseUserInput method is designed to process various forms of user input for program use, including both paths and names
      *
      * For example, if the user inputs a file with an extension such as mp4, the method should return the name of the file without the extension
      * Another example, if the user inputs a file path to a directory, the method should return the name of the directory
+     * File or directory names also cannot have leading or trailing spaces such as "     directory name        ", so the method should trim these
+     * Finally, path names cannot have invalid characters or "\\" together, so the method should attempt to trim these
      * */
-    public String parseUserInput() {
+    public String parseUserInput(String userInput, boolean print) {
+        String returnString = userInput;
 
+        if (identifyUserInput(userInput, false) == UserInputTypes.PATH_INVALID) {
+            String invalidChars = "/:*?\"<>|";
+            for (Character invalid : invalidChars.toCharArray()) {
+                if (returnString.contains(invalid.toString())) {
+                    System.out.print("\nInvalid character: " + invalid.toString() + " detected");
 
-        return "";
+                    returnString = returnString.replace(invalid.toString(), "");
+                }
+            }
+
+            if (returnString.contains("\\\\")) {
+                returnString.replace("\\\\", "\\");
+            }
+        }
+
+        System.out.print(returnString);
+
+        return returnString;
     }
 
     public void executeMP4ToPNGSequenceCommand(String[] inputCommand, Path FFmpegLocation) throws IOException {
