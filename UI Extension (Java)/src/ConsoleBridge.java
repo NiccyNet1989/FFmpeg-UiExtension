@@ -18,15 +18,15 @@ public class ConsoleBridge {
 
     public ConsoleBridge(Path inputtedDirectory) {
         this.currentCommand = new String[]{""};
-        this.directory = inputtedDirectory.toFile();
         this.processBuilder = new ProcessBuilder();
+        changeDirectory(inputtedDirectory);
         this.process = null;
         this.outputStream = null;
         this.inputStream = null;
     }
 
 
-    // The below constructor is intended to be used for one-time command console calls, and is what the UI will primarily be using
+    // The below constructor is intended to be used for one-time command console calls, but will not be used in this application
     public ConsoleBridge(String[] inputtedCommand, Path inputtedDirectory) {
         this.currentCommand = inputtedCommand;
 //        this.directory = new File(System.getProperty("user.dir").toString());
@@ -75,7 +75,7 @@ public class ConsoleBridge {
         return true;
     }
 
-    public boolean executeCommand(Consumer<String> callbackReference) throws IOException {
+    public boolean executeCommand(boolean printToConsole, Consumer<String> callbackReference) throws IOException {
         if (this.currentCommand.equals(new String[]{""})) {
             System.out.print("\nError: No current command\n");
             return false;
@@ -92,11 +92,13 @@ public class ConsoleBridge {
                 this.outputStream = new BufferedOutputStream(process.getOutputStream());
                 this.inputStream = new BufferedInputStream(process.getInputStream());
 
-                System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
-                for (int i = 1; i < currentCommand.length; i++) {
-                    System.out.print(" " + currentCommand[i]);
+                if (printToConsole) {
+                    System.out.print("\n\nExecuting current command: \n\t" + this.currentCommand[0]);
+                    for (int i = 1; i < currentCommand.length; i++) {
+                        System.out.print(" " + currentCommand[i]);
+                    }
+                    System.out.print("\nAt directory: \n\t" + this.directory + "\n");
                 }
-                System.out.print("\nAt directory: \n\t" + this.directory + "\n");
 
                 try {
                     BufferedReader outputReader = new BufferedReader(new InputStreamReader(this.inputStream));
@@ -109,10 +111,12 @@ public class ConsoleBridge {
                 }
 
                 int exitCode = process.waitFor();
-                if (exitCode == 0) {
-                    System.out.print("\nSuccessfully completed operation");
-                } else {
-                    System.out.print("\nError: Process wait returned non-zero exit code");
+                if (printToConsole) {
+                    if (exitCode == 0) {
+                        System.out.print("\nSuccessfully completed operation");
+                    } else {
+                        System.out.print("\nError: Process wait returned non-zero exit code " + exitCode);
+                    }
                 }
 
                 this.terminateCurrentProcess();
@@ -127,6 +131,7 @@ public class ConsoleBridge {
 
         return false;
     }
+
 
     public boolean terminateCurrentProcess() throws IOException {
         if (Objects.isNull(this.outputStream)) {
