@@ -18,15 +18,15 @@ public class ConsoleBridge {
 
     public ConsoleBridge(Path inputtedDirectory) {
         this.currentCommand = new String[]{""};
-        this.directory = inputtedDirectory.toFile();
         this.processBuilder = new ProcessBuilder();
+        changeDirectory(inputtedDirectory);
         this.process = null;
         this.outputStream = null;
         this.inputStream = null;
     }
 
 
-    // The below constructor is intended to be used for one-time command console calls, and is what the UI will primarily be using
+    // The below constructor is intended to be used for one-time command console calls, but will not be used in this application
     public ConsoleBridge(String[] inputtedCommand, Path inputtedDirectory) {
         this.currentCommand = inputtedCommand;
 //        this.directory = new File(System.getProperty("user.dir").toString());
