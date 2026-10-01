@@ -183,6 +183,7 @@ public class UserInterface {
         targetMP4FolderButton.setIcon(fileIcon);
         targetMP4FolderButton.setBackground(Color.WHITE);
         targetMP4FolderButton.addActionListener(e -> {
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fileChooser.setFileFilter(new FileNameExtensionFilter("MP4 Files", "mp4"));
             int returnValue = fileChooser.showOpenDialog(frame);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
@@ -303,6 +304,14 @@ public class UserInterface {
         outputLocationFolderButton.setPreferredSize(new Dimension(24, 24));
         outputLocationFolderButton.setIcon(fileIcon);
         outputLocationFolderButton.setBackground(Color.WHITE);
+        outputLocationFolderButton.addActionListener(e -> {
+            fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int returnValue = fileChooser.showOpenDialog(frame);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                outputLocationTextField.setText(fileChooser.getSelectedFile().toString());
+            }
+        });
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -467,9 +476,9 @@ public class UserInterface {
                         targetMP4ExtensionRemoved = sanitizedTargetMP4UserInput.substring(0, sanitizedTargetMP4UserInput.length() - 4);
                         checkPath = Paths.get(applicationRoot.resolve("Default Output").resolve(targetMP4ExtensionRemoved).toString());
                     } else if (targetMP4UserInputType == UserInputTypes.PATH_EXISTING) {
-                            String tempFileName = Paths.get(sanitizedTargetMP4UserInput).getFileName().toString();
-                            targetMP4ExtensionRemoved = tempFileName.substring(0, tempFileName.length() - 4);
-                            checkPath = Paths.get(applicationRoot.resolve("Default Output").resolve(targetMP4ExtensionRemoved).toString());
+                        String tempFileName = Paths.get(sanitizedTargetMP4UserInput).getFileName().toString();
+                        targetMP4ExtensionRemoved = tempFileName.substring(0, tempFileName.length() - 4);
+                        checkPath = Paths.get(applicationRoot.resolve("Default Output").resolve(targetMP4ExtensionRemoved).toString());
                     } else {
                         createdFolderName = "\"[" + timePrefix + "]\"";
                     }
@@ -498,7 +507,7 @@ public class UserInterface {
 
                     // Once the directory has been created, trim the " from createdFolderName, so it may be used in path arguments
                     createdFolderName = createdFolderName.replace("\"", "");
-                    outputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(createdFolderName).toString() + "_%04d.png\"";
+                    outputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(createdFolderName).resolve(createdFolderName).toString() + "_%04d.png\"";
                 }
 
                 // The NAME_NONEXISTENT case is unique because, if the user inputs a name that doesn't exist, it's assumed that the user wants to create a folder with that name
@@ -526,7 +535,7 @@ public class UserInterface {
                     tempConsoleBridge = null;
                     createdFolderName = createdFolderName.replace("\"", "");
 
-                    outputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(createdFolderName).toString() + "_%04d.png\"";
+                    outputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(createdFolderName).resolve(createdFolderName).toString() + "_%04d.png\"";
                 }
 
                 case PATH_EXISTING -> {
@@ -567,6 +576,7 @@ public class UserInterface {
 
                     ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
                     tempConsoleBridge.changeCommand(mkdirCommand);
+                    tempConsoleBridge.changeDirectory(Paths.get(sanitizedOutputLocationUserInput));
                     try {
                         tempConsoleBridge.executeCommand(true, tempOutput -> {
                         });
@@ -577,36 +587,36 @@ public class UserInterface {
                     tempConsoleBridge = null;
                     createdFolderName = createdFolderName.replace("\"", "");
 
-                    outputLocationArgument = "\"" + Paths.get(sanitizedOutputLocationUserInput).resolve(createdFolderName) + "_%04d.png\"";
+                    outputLocationArgument = "\"" + Paths.get(sanitizedOutputLocationUserInput).resolve(createdFolderName).resolve(createdFolderName) + "_%04d.png\"";
                 }
             }
 
-//            String[] fullCommand = {""};
-//            if (desiredFPSCheckBox.isSelected()) {
-//                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, "-vf", "\"fps=" + frameSpinner.getValue().toString() + "\"", outputLocationArgument};
-//            } else {
-//                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, outputLocationArgument};
-//            }
-//
-//            /*
-//            System.out.print("\n");
-//            for (String arg : fullCommand) {
-//                System.out.print(arg + " ");
-//            }
-//            * */
-//
-//            try {
-//                executeMP4ToPNGSequenceCommand(fullCommand);
-//            } catch (IOException ex) {
-//                throw new RuntimeException(ex);
-//            }
-//
-//            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
-//            try {
-//                executeGetMP4FramerateCommand(getFPSCommand);
-//            } catch (IOException ex) {
-//                throw new RuntimeException(ex);
-//            }
+            String[] fullCommand = {""};
+            if (desiredFPSCheckBox.isSelected()) {
+                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, "-vf", "\"fps=" + frameSpinner.getValue().toString() + "\"", outputLocationArgument};
+            } else {
+                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, outputLocationArgument};
+            }
+
+            /*
+            System.out.print("\n");
+            for (String arg : fullCommand) {
+                System.out.print(arg + " ");
+            }
+            * */
+
+            try {
+                executeMP4ToPNGSequenceCommand(fullCommand);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
+            try {
+                executeGetMP4FramerateCommand(getFPSCommand);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -751,7 +761,7 @@ public class UserInterface {
     public void executeMP4ToPNGSequenceCommand(String[] inputCommand) throws IOException {
         this.rootConsoleBridge.changeCommand(inputCommand);
 
-        rootConsoleBridge.executeCommand(false, consoleBridgeOutput -> {
+        rootConsoleBridge.executeCommand(true, consoleBridgeOutput -> {
             SwingUtilities.invokeLater(() -> {
                 consoleOutputTextArea.append("\n" + consoleBridgeOutput);
             });
