@@ -6,6 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 public class UserInterface {
     JFrame frame;
@@ -13,11 +16,8 @@ public class UserInterface {
     Path FFmpegPath;
     String FFMpegExecutablePath;
     ConsoleBridge consoleBridge;
-
     JFileChooser fileChooser;
     ImageIcon fileIcon;
-
-
     private JTextField estimatedFpsTextField;
     private JTextArea consoleOutputTextArea;
 
@@ -30,8 +30,6 @@ public class UserInterface {
 
         this.consoleBridge = new ConsoleBridge(initialDirectory);
         this.fileChooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("mp4 files", "mp4");
-        fileChooser.setFileFilter(filter);
 
         //==================================================
         // Part 1 - Base Frame Development
@@ -184,6 +182,13 @@ public class UserInterface {
         filePathFolderButton.setPreferredSize(new Dimension(24, 24));
         filePathFolderButton.setIcon(fileIcon);
         filePathFolderButton.setBackground(Color.WHITE);
+        filePathFolderButton.addActionListener(e -> {
+            fileChooser.setFileFilter(new FileNameExtensionFilter("MP4 Files", "mp4"));
+            int returnValue = fileChooser.showOpenDialog(frame);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                filePathTextField.setText(fileChooser.getSelectedFile().toString());
+            }
+        });
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -379,56 +384,27 @@ public class UserInterface {
 
         JButton confirmButton = new JButton("Confirm");
         confirmButton.addActionListener(e -> {
-            String inputFilePathArgument = "\"../" + filePathTextField.getText() + ".mp4\"";
+            String inputFilePathArgument = "";
+            String sanitizedFilePathTextField = filePathTextField.getText().strip();
+            if (identifyUserInput(sanitizedFilePathTextField, false) == UserInputTypes.PATH_EXISTING) {
+                inputFilePathArgument = "\"" + sanitizedFilePathTextField + "\"";
+            } else if (identifyUserInput(sanitizedFilePathTextField, false) == UserInputTypes.NAME_EXISTING) {
+                inputFilePathArgument = "\"../" + sanitizedFilePathTextField + ".mp4\"";
+            }
+
             String outputFolderArgument = "";
 
             /*Process input to the outputFolderTextField
              * Case 1. Empty user input
              * Case 2. Directory doesn't already exist*/
-            UserInputTypes outputFolderInputCode = identifyUserInput(outputFolderTextField.getText(), false);
+            String sanitizedOutputFolderTextField = outputFolderTextField.getText().strip();
+            UserInputTypes outputFolderInputCode = identifyUserInput(sanitizedOutputFolderTextField, false);
 
+            String mkdirCommand = "";
             if (outputFolderInputCode == UserInputTypes.EMPTY) {
-
+                outputFolderArgument = applicationRoot.resolve("Default Output").toString() + "_%04d.png";
+                System.out.print("\n" + outputFolderArgument);
             }
-            if (outputFolderInputCode == UserInputTypes.PATH_NONEXISTENT) {
-                String[] mkdirCommand = {"cmd.exe", "/c", "mkdir", outputFolderTextField.getText()};
-                ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
-                tempConsoleBridge.changeCommand(mkdirCommand);
-                tempConsoleBridge.changeDirectory(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
-
-                try {
-                    tempConsoleBridge.executeCommand(true, consoleOutput -> {
-                    });
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-
-
-                //NEEDS FIX
-                //When parseUserInput is completed, the line below must replace outputFolderTextField.getText() with parseUserInput(outputFolderTextField.getText())
-                //This is because, in its current state, the line below will still attempt to create a file with invalid characters in its name, which are reserved by Windows OS at all times!
-                outputFolderArgument = "\"" + applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence") + "/" + outputFolderTextField.getText() + "_%04d.png\"";
-            }
-            if (outputFolderInputCode == UserInputTypes.PATH_EXISTING) {
-
-            }
-            if (outputFolderInputCode == UserInputTypes.NAME_EXISTING) {
-                String[] mkdirCommand = {"cmd.exe", "/c", "mkdir", outputFolderTextField.getText()};
-                ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
-                tempConsoleBridge.changeCommand(mkdirCommand);
-                tempConsoleBridge.changeDirectory(applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence"));
-
-                try {
-                    tempConsoleBridge.executeCommand(true, consoleOutput -> {
-                    });
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-
-
-                outputFolderArgument = "\"" + applicationRoot.resolve("Default Output").resolve("MP4 to PNG Sequence") + "/" + outputFolderTextField.getText() + "/" + filePathTextField.getText() + "_%04d.png\"";
-            }
-
 
             String[] fullCommand = {""};
             if (desiredFPSCheckBox.isSelected()) {
@@ -446,7 +422,6 @@ public class UserInterface {
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-
 
             String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
             try {
@@ -470,9 +445,14 @@ public class UserInterface {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
-            SwingUtilities.invokeLater(() -> {
-                identifyUserInput(outputFolderTextField.getText(), true);
-            });
+//            SwingUtilities.invokeLater(() -> {
+//                System.out.print("Testing: " + outputFolderTextField.getText());
+//                identifyUserInput(outputFolderTextField.getText(), true);
+//            });
+
+            LocalDateTime currentTime = LocalDateTime.now();
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd, HH-mm-ss");
+            System.out.print("\n" + currentTime.format(timeFormatter));
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -527,9 +507,7 @@ public class UserInterface {
                 if (!Files.exists(inputtedPath)) {
                     Path defaultOutputFolderPath = applicationRoot.resolve("Default Output");
                     Path defaultInputFolderPath = applicationRoot.resolve("Default Input");
-//                    System.out.print(("\n\n"+Files.exists(defaultOutputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput))+"\n\n"));
-//                    System.out.print("\n\n"+defaultOutputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput)+"\n\n");
-                    if (Files.exists(defaultOutputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput)) || Files.exists(defaultOutputFolderPath.resolve("PNG Sequence to MP4").resolve(userInput)) || Files.exists(defaultInputFolderPath.resolve("MP4 to PNG Sequence").resolve(userInput)) || Files.exists(defaultInputFolderPath.resolve("PNG Sequence to MP4").resolve(userInput))) {
+                    if (Files.exists(defaultOutputFolderPath.resolve(userInput)) || Files.exists(defaultInputFolderPath.resolve(userInput))) {
                         // If the user simply inputs the name of a file, the application will only check the default folders if it exists, since it cannot reasonably check everywhere else in the application or the device
                         if (print)
                             System.out.print("\nUser input the name of an existing file or directory found in the default folders");
