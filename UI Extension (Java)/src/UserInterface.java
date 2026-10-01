@@ -272,7 +272,7 @@ public class UserInterface {
         //==================================================
         // Part 3 - Panel 2
 
-        JLabel outputFolderLabel = new JLabel("Output Folder");
+        JLabel outputLocationLabel = new JLabel("Output Folder");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -284,10 +284,9 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(10, 10, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(outputFolderLabel, constraints);
+        panel2.add(outputLocationLabel, constraints);
 
-        JTextField outputFolderTextField = new JTextField();
-        outputFolderTextField.setPreferredSize(new Dimension(280, 25));
+        outputLocationTextField.setPreferredSize(new Dimension(280, 25));
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -297,7 +296,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.insets = new Insets(0, 10, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(outputFolderTextField, constraints);
+        panel2.add(outputLocationTextField, constraints);
 
         JButton outputPathFolderButton = new JButton();
         outputPathFolderButton.setPreferredSize(new Dimension(24, 24));
@@ -394,10 +393,10 @@ public class UserInterface {
 
             String outputFolderArgument = "";
 
-            /*Process input to the outputFolderTextField
+            /*Process input to the outputLocationTextField
              * Case 1. Empty user input
              * Case 2. Directory doesn't already exist*/
-            String sanitizedOutputFolderTextField = outputFolderTextField.getText().strip();
+            String sanitizedOutputFolderTextField = outputLocationTextField.getText().strip();
             UserInputTypes outputFolderInputCode = identifyUserInput(sanitizedOutputFolderTextField, false);
 
             String mkdirCommand = "";
@@ -446,8 +445,8 @@ public class UserInterface {
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(e -> {
 //            SwingUtilities.invokeLater(() -> {
-//                System.out.print("Testing: " + outputFolderTextField.getText());
-//                identifyUserInput(outputFolderTextField.getText(), true);
+//                System.out.print("Testing: " + outputLocationTextField.getText());
+//                identifyUserInput(outputLocationTextField.getText(), true);
 //            });
 
             LocalDateTime currentTime = LocalDateTime.now();
