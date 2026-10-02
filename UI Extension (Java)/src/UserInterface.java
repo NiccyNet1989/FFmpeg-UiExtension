@@ -11,7 +11,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class UserInterface {
-    JFrame frame;
+    JPanel MP4toPNGPanel = new JPanel();
+    JPanel PNGtoMP4Panel = new JPanel();
     Path applicationRoot;
     Path FFmpegPath;
     String FFMpegExecutablePath;
@@ -19,9 +20,14 @@ public class UserInterface {
     JFileChooser fileChooser;
     ImageIcon fileIcon;
     private JTextField estimatedFpsTextField;
-    private JTextArea consoleOutputTextArea;
+    private JTextArea m2pconsoleOutputTextArea;
 
     public UserInterface(Path initialDirectory) {
+        //==================================================
+        // Part 1 - Base Frame Development
+
+        System.out.print("Attempting to create user interface...");
+
         // The UI keeps track of the application's root, and the location of FFmpeg. This may be used for reference.
         this.applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
         this.FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent().resolve("bin");
@@ -31,23 +37,34 @@ public class UserInterface {
         this.rootConsoleBridge = new ConsoleBridge(initialDirectory);
         this.fileChooser = new JFileChooser();
 
-        //==================================================
-        // Part 1 - Base Frame Development
-        // Outputs the creation of the UI to the user via the console
-        System.out.print("Attempting to create user interface...");
+        JFrame mainFrame = new JFrame("FFmpeg UI Extension");
+        mainFrame.setLayout(new BorderLayout());
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setSize(new Dimension(600, 450));
+        mainFrame.setResizable(false);
+        mainFrame.getContentPane().setBackground(Color.WHITE);
+
+        JPanel cardLayoutContainer = new JPanel(new CardLayout());
+        cardLayoutContainer.add(MP4toPNGPanel, "MP4 to PNG Sequence Panel");
+        cardLayoutContainer.add(PNGtoMP4Panel, "PNG Sequence to MP4 Panel");
+        CardLayout currentCard = (CardLayout) cardLayoutContainer.getLayout();
+        mainFrame.add(cardLayoutContainer);
+
+        GridBagConstraints constraints = new GridBagConstraints();
+
 
         // Basic frame components
-        this.frame = new JFrame("User Interface");
-        frame.setLayout(new GridBagLayout());
-        frame.getContentPane().setBackground(Color.WHITE);
-        GridBagConstraints constraints = new GridBagConstraints();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(new Dimension(600, 450));
-        frame.setResizable(false);
+        MP4toPNGPanel.setLayout(new GridBagLayout());
+        MP4toPNGPanel.setBackground(Color.WHITE);
+        MP4toPNGPanel.setSize(new Dimension(600, 450));
+
+        PNGtoMP4Panel.setLayout(new GridBagLayout());
+        PNGtoMP4Panel.setBackground(Color.WHITE);
+        PNGtoMP4Panel.setSize(new Dimension(600, 450));
 
         // Adding a menu bar
         JMenuBar menuBar = new JMenuBar();
-        frame.setJMenuBar(menuBar);
+        mainFrame.setJMenuBar(menuBar);
 
         JMenu fileMenu = new JMenu("File");
         JMenu editMenu = new JMenu("Edit");
@@ -68,7 +85,13 @@ public class UserInterface {
         editMenu.add(editClear);
 
         JMenuItem operationsMP4toPNGSequence = new JMenuItem("MP4 to PNG Sequence");
+        operationsMP4toPNGSequence.addActionListener(e -> {
+            currentCard.show(cardLayoutContainer, "MP4 to PNG Sequence Panel");
+        });
         JMenuItem operationsPNGSequencetoMP4 = new JMenuItem("PNG Sequence to MP4");
+        operationsPNGSequencetoMP4.addActionListener(e -> {
+            currentCard.show(cardLayoutContainer, "PNG Sequence to MP4 Panel");
+        });
         operationsMenu.add(operationsMP4toPNGSequence);
         operationsMenu.add(operationsPNGSequencetoMP4);
 
@@ -82,15 +105,15 @@ public class UserInterface {
 
 
         // Defining the three panels main panels where the components will reside
-        JPanel panel1 = new JPanel();
-        JPanel panel2 = new JPanel();
-        JPanel panel3 = new JPanel();
-        panel1.setLayout(new GridBagLayout());
-        panel2.setLayout(new GridBagLayout());
-        panel3.setLayout(new GridBagLayout());
-        panel1.setBackground(Color.WHITE);
-        panel2.setBackground(Color.WHITE);
-        panel3.setBackground(Color.WHITE);
+        JPanel m2pPanel1 = new JPanel();
+        JPanel m2pPanel2 = new JPanel();
+        JPanel m2pPanel3 = new JPanel();
+        m2pPanel1.setLayout(new GridBagLayout());
+        m2pPanel2.setLayout(new GridBagLayout());
+        m2pPanel3.setLayout(new GridBagLayout());
+        m2pPanel1.setBackground(Color.WHITE);
+        m2pPanel2.setBackground(Color.WHITE);
+        m2pPanel3.setBackground(Color.WHITE);
 
         /*
         //Default copy-pastable for easily managing constraints
@@ -118,7 +141,7 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.LINE_START;
-        frame.add(panel1, constraints);
+        MP4toPNGPanel.add(m2pPanel1, constraints);
 
         constraints = new GridBagConstraints();
         constraints.gridx = 0;      // Position in grid
@@ -131,7 +154,7 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        frame.add(panel2, constraints);
+        MP4toPNGPanel.add(m2pPanel2, constraints);
 
         constraints = new GridBagConstraints();
         constraints.gridx = 0;      // Position in grid
@@ -145,13 +168,13 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.CENTER;
-        frame.add(panel3, constraints);
+        MP4toPNGPanel.add(m2pPanel3, constraints);
 
 
         //==================================================
         // Part 2 - Panel 1
 
-        JLabel targetMP4Label = new JLabel("Target MP4");
+        JLabel m2ptargetMP4Label = new JLabel("Target MP4");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -163,10 +186,10 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(10, 10, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel1.add(targetMP4Label, constraints);
+        m2pPanel1.add(m2ptargetMP4Label, constraints);
 
-        JTextField targetMP4TextField = new JTextField();
-        targetMP4TextField.setPreferredSize(new Dimension(280, 25));
+        JTextField m2ptargetMP4TextField = new JTextField();
+        m2ptargetMP4TextField.setPreferredSize(new Dimension(280, 25));
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -176,18 +199,18 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.insets = new Insets(0, 10, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel1.add(targetMP4TextField, constraints);
+        m2pPanel1.add(m2ptargetMP4TextField, constraints);
 
-        JButton targetMP4FolderButton = new JButton();
-        targetMP4FolderButton.setPreferredSize(new Dimension(24, 24));
-        targetMP4FolderButton.setIcon(fileIcon);
-        targetMP4FolderButton.setBackground(Color.WHITE);
-        targetMP4FolderButton.addActionListener(e -> {
+        JButton m2ptargetMP4FolderButton = new JButton();
+        m2ptargetMP4FolderButton.setPreferredSize(new Dimension(24, 24));
+        m2ptargetMP4FolderButton.setIcon(fileIcon);
+        m2ptargetMP4FolderButton.setBackground(Color.WHITE);
+        m2ptargetMP4FolderButton.addActionListener(e -> {
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             fileChooser.setFileFilter(new FileNameExtensionFilter("MP4 Files", "mp4"));
-            int returnValue = fileChooser.showOpenDialog(frame);
+            int returnValue = fileChooser.showOpenDialog(MP4toPNGPanel);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
-                targetMP4TextField.setText(fileChooser.getSelectedFile().toString());
+                m2ptargetMP4TextField.setText(fileChooser.getSelectedFile().toString());
             }
         });
         constraints = new GridBagConstraints();
@@ -199,7 +222,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.insets = new Insets(0, 289, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel1.add(targetMP4FolderButton, constraints);
+        m2pPanel1.add(m2ptargetMP4FolderButton, constraints);
 
 //        constraints = new GridBagConstraints();
 //        constraints.gridx = 1;      // Position in grid
@@ -214,7 +237,7 @@ public class UserInterface {
 //        constraints.anchor = GridBagConstraints.LINE_START;
 //        panel1.add(new JPanel(), constraints);
 
-        JLabel frameSpinnerLabel = new JLabel("Desired FPS (Max 60)");
+        JLabel m2pframeSpinnerLabel = new JLabel("Desired FPS (Max 60)");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -226,11 +249,11 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(10, 212, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel1.add(frameSpinnerLabel, constraints);
+        m2pPanel1.add(m2pframeSpinnerLabel, constraints);
 
-        SpinnerModel numberSpinnerModel = new SpinnerNumberModel(1, 1, 60, 1); // (Initial, min, max, step)
-        JSpinner frameSpinner = new JSpinner(numberSpinnerModel);
-        frameSpinner.setEnabled(false);
+        SpinnerModel m2pnumberSpinnerModel = new SpinnerNumberModel(1, 1, 60, 1); // (Initial, min, max, step)
+        JSpinner m2pframeSpinner = new JSpinner(m2pnumberSpinnerModel);
+        m2pframeSpinner.setEnabled(false);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 1;
@@ -242,20 +265,20 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 242, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel1.add(frameSpinner, constraints);
+        m2pPanel1.add(m2pframeSpinner, constraints);
 
-        JCheckBox desiredFPSCheckBox = new JCheckBox();
-        desiredFPSCheckBox.addActionListener(e -> {
+        JCheckBox m2pdesiredFPSCheckBox = new JCheckBox();
+        m2pdesiredFPSCheckBox.addActionListener(e -> {
             SwingUtilities.invokeLater(() -> {
-                if (desiredFPSCheckBox.isSelected()) {
-                    frameSpinner.setEnabled(true);
+                if (m2pdesiredFPSCheckBox.isSelected()) {
+                    m2pframeSpinner.setEnabled(true);
                 } else {
-                    frameSpinner.setEnabled(false);
+                    m2pframeSpinner.setEnabled(false);
                 }
             });
 
         });
-        desiredFPSCheckBox.setBackground(Color.WHITE);
+        m2pdesiredFPSCheckBox.setBackground(Color.WHITE);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 1;
@@ -267,13 +290,13 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 210, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel1.add(desiredFPSCheckBox, constraints);
+        m2pPanel1.add(m2pdesiredFPSCheckBox, constraints);
 
 
         //==================================================
         // Part 3 - Panel 2
 
-        JLabel outputLocationLabel = new JLabel("Output Location");
+        JLabel m2poutputLocationLabel = new JLabel("Output Location");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -285,10 +308,10 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(10, 10, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(outputLocationLabel, constraints);
+        m2pPanel2.add(m2poutputLocationLabel, constraints);
 
-        JTextField outputLocationTextField = new JTextField();
-        outputLocationTextField.setPreferredSize(new Dimension(280, 25));
+        JTextField m2poutputLocationTextField = new JTextField();
+        m2poutputLocationTextField.setPreferredSize(new Dimension(280, 25));
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -298,18 +321,18 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.insets = new Insets(0, 10, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(outputLocationTextField, constraints);
+        m2pPanel2.add(m2poutputLocationTextField, constraints);
 
-        JButton outputLocationFolderButton = new JButton();
-        outputLocationFolderButton.setPreferredSize(new Dimension(24, 24));
-        outputLocationFolderButton.setIcon(fileIcon);
-        outputLocationFolderButton.setBackground(Color.WHITE);
-        outputLocationFolderButton.addActionListener(e -> {
+        JButton m2poutputLocationFolderButton = new JButton();
+        m2poutputLocationFolderButton.setPreferredSize(new Dimension(24, 24));
+        m2poutputLocationFolderButton.setIcon(fileIcon);
+        m2poutputLocationFolderButton.setBackground(Color.WHITE);
+        m2poutputLocationFolderButton.addActionListener(e -> {
             fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showOpenDialog(frame);
+            int returnValue = fileChooser.showOpenDialog(MP4toPNGPanel);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
-                outputLocationTextField.setText(fileChooser.getSelectedFile().toString());
+                m2poutputLocationTextField.setText(fileChooser.getSelectedFile().toString());
             }
         });
         constraints = new GridBagConstraints();
@@ -321,7 +344,7 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.insets = new Insets(0, 289, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(outputLocationFolderButton, constraints);
+        m2pPanel2.add(m2poutputLocationFolderButton, constraints);
 
 //        constraints = new GridBagConstraints();
 //        constraints.gridx = 1;      // Position in grid
@@ -336,7 +359,7 @@ public class UserInterface {
 //        constraints.anchor = GridBagConstraints.LINE_START;
 //        panel2.add(new JPanel(), constraints);
 
-        JLabel fpsLabel = new JLabel("Estimated FPS");
+        JLabel m2pfpsLabel = new JLabel("Estimated FPS");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -348,7 +371,7 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(10, 146, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(fpsLabel, constraints);
+        m2pPanel2.add(m2pfpsLabel, constraints);
 
         estimatedFpsTextField = new JTextField();
         estimatedFpsTextField.setPreferredSize(new Dimension(40, 25));
@@ -365,19 +388,19 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 146, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        panel2.add(estimatedFpsTextField, constraints);
+        m2pPanel2.add(estimatedFpsTextField, constraints);
 
         //==================================================
         // Part 4 - Panel 3
 
-        consoleOutputTextArea = new JTextArea();
+        m2pconsoleOutputTextArea = new JTextArea();
 //        consoleOutputTextArea.setPreferredSize(new Dimension(500, 80));
-        consoleOutputTextArea.setEditable(false);
-        consoleOutputTextArea.setLineWrap(true);
-        consoleOutputTextArea.setWrapStyleWord(true);
-        consoleOutputTextArea.setDisabledTextColor(Color.BLACK);
-        JScrollPane consoleOutputScrollPane = new JScrollPane(consoleOutputTextArea);
-        consoleOutputScrollPane.setPreferredSize(new Dimension(500, 80));
+        m2pconsoleOutputTextArea.setEditable(false);
+        m2pconsoleOutputTextArea.setLineWrap(true);
+        m2pconsoleOutputTextArea.setWrapStyleWord(true);
+        m2pconsoleOutputTextArea.setDisabledTextColor(Color.BLACK);
+        JScrollPane m2pconsoleOutputScrollPane = new JScrollPane(m2pconsoleOutputTextArea);
+        m2pconsoleOutputScrollPane.setPreferredSize(new Dimension(500, 80));
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
         constraints.gridy = 0;
@@ -389,58 +412,58 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.PAGE_START;
-        panel3.add(consoleOutputScrollPane, constraints);
+        m2pPanel3.add(m2pconsoleOutputScrollPane, constraints);
 
-        JButton confirmButton = new JButton("Confirm");
-        confirmButton.addActionListener(e -> {
-            String inputFilePathArgument = "";
-            String sanitizedTargetMP4UserInput = targetMP4TextField.getText().strip();
-            UserInputTypes targetMP4UserInputType = identifyUserInput(sanitizedTargetMP4UserInput, false);
+        JButton m2pconfirmButton = new JButton("Confirm");
+        m2pconfirmButton.addActionListener(e -> {
+            String m2pinputFilePathArgument = "";
+            String m2psanitizedTargetMP4UserInput = m2ptargetMP4TextField.getText().strip();
+            UserInputTypes m2ptargetMP4UserInputType = identifyUserInput(m2psanitizedTargetMP4UserInput, false);
 
-            String createdFolderName = null;
+            String m2pcreatedFolderName = null;
 
-            switch (targetMP4UserInputType) {
+            switch (m2ptargetMP4UserInputType) {
                 case EMPTY -> {
                     SwingUtilities.invokeLater(() -> {
-                        consoleOutputTextArea.setText("Please input a file path or the name of an MP4 file you have placed in the Default Input Folder");
+                        m2pconsoleOutputTextArea.setText("Please input a file path or the name of an MP4 file you have placed in the Default Input Folder");
                     });
                     return;
                 }
                 case PATH_INVALID, PATH_NOT_ABSOLUTE -> {
                     SwingUtilities.invokeLater(() -> {
-                        consoleOutputTextArea.setText("Error: Inputted file path is invalid");
+                        m2pconsoleOutputTextArea.setText("Error: Inputted file path is invalid");
                     });
                     return;
                 }
                 case PATH_NONEXISTENT -> {
                     SwingUtilities.invokeLater(() -> {
-                        consoleOutputTextArea.setText("Error: File path '" + targetMP4TextField.getText() + "' not found");
+                        m2pconsoleOutputTextArea.setText("Error: File path '" + m2ptargetMP4TextField.getText() + "' not found");
                     });
                     return;
                 }
                 case NAME_NONEXISTENT -> {
                     SwingUtilities.invokeLater(() -> {
-                        consoleOutputTextArea.setText("Error: File with name '" + targetMP4TextField.getText() + "' not found in Default Input folder. (Note: Please include the .mp4 extension)");
+                        m2pconsoleOutputTextArea.setText("Error: File with name '" + m2ptargetMP4TextField.getText() + "' not found in Default Input folder. (Note: Please include the .mp4 extension)");
                     });
                     return;
                 }
 
                 case PATH_EXISTING -> {
-                    if (sanitizedTargetMP4UserInput.endsWith(".mp4")) {
-                        inputFilePathArgument = "\"" + sanitizedTargetMP4UserInput + "\"";
+                    if (m2psanitizedTargetMP4UserInput.endsWith(".mp4")) {
+                        m2pinputFilePathArgument = "\"" + m2psanitizedTargetMP4UserInput + "\"";
                     } else {
                         SwingUtilities.invokeLater(() -> {
-                            consoleOutputTextArea.setText("Error: The provided file path does not refer to an MP4 file");
+                            m2pconsoleOutputTextArea.setText("Error: The provided file path does not refer to an MP4 file");
                         });
                         return;
                     }
                 }
                 case NAME_EXISTING -> {
-                    if (sanitizedTargetMP4UserInput.endsWith(".mp4")) {
-                        inputFilePathArgument = applicationRoot.resolve("Default Input").resolve(sanitizedTargetMP4UserInput).toString();
+                    if (m2psanitizedTargetMP4UserInput.endsWith(".mp4")) {
+                        m2pinputFilePathArgument = applicationRoot.resolve("Default Input").resolve(m2psanitizedTargetMP4UserInput).toString();
                     } else {
                         SwingUtilities.invokeLater(() -> {
-                            consoleOutputTextArea.setText("Error: The provided file name does not refer to an MP4 file");
+                            m2pconsoleOutputTextArea.setText("Error: The provided file name does not refer to an MP4 file");
                         });
                         return;
                     }
@@ -448,54 +471,54 @@ public class UserInterface {
 
                 case DEFAULT -> {
                     SwingUtilities.invokeLater(() -> {
-                        consoleOutputTextArea.setText("Error: An unknown error has occurred");
+                        m2pconsoleOutputTextArea.setText("Error: An unknown error has occurred");
                     });
                     return;
                 }
             }
 
 
-            String outputLocationArgument = "";
+            String m2poutputLocationArgument = "";
 
             /*Process input to the outputLocationTextField
              * Case 1. Empty user input
              * Case 2. Directory doesn't already exist*/
-            String sanitizedOutputLocationUserInput = outputLocationTextField.getText().strip();
-            UserInputTypes outputLocationUserInputType = identifyUserInput(sanitizedOutputLocationUserInput, true);
+            String m2psanitizedOutputLocationUserInput = m2poutputLocationTextField.getText().strip();
+            UserInputTypes m2poutputLocationUserInputType = identifyUserInput(m2psanitizedOutputLocationUserInput, false);
             LocalDateTime currentTime = LocalDateTime.now();
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd, HH;mm.ss");
             String timePrefix = currentTime.format(timeFormatter);
 
-            switch (outputLocationUserInputType) {
+            switch (m2poutputLocationUserInputType) {
                 case EMPTY, DEFAULT, PATH_INVALID, PATH_NONEXISTENT, PATH_NOT_ABSOLUTE -> {
-                    String[] mkdirCommand = {""};
-                    String targetMP4ExtensionRemoved = null;
-                    Path checkPath = null;
+                    String[] m2pmkdirCommand = {""};
+                    String m2ptargetMP4ExtensionRemoved = null;
+                    Path m2pcheckPath = null;
 
-                    if (targetMP4UserInputType == UserInputTypes.NAME_EXISTING) {
-                        targetMP4ExtensionRemoved = sanitizedTargetMP4UserInput.substring(0, sanitizedTargetMP4UserInput.length() - 4);
-                        checkPath = Paths.get(applicationRoot.resolve("Default Output").resolve(targetMP4ExtensionRemoved).toString());
-                    } else if (targetMP4UserInputType == UserInputTypes.PATH_EXISTING) {
-                        String tempFileName = Paths.get(sanitizedTargetMP4UserInput).getFileName().toString();
-                        targetMP4ExtensionRemoved = tempFileName.substring(0, tempFileName.length() - 4);
-                        checkPath = Paths.get(applicationRoot.resolve("Default Output").resolve(targetMP4ExtensionRemoved).toString());
+                    if (m2ptargetMP4UserInputType == UserInputTypes.NAME_EXISTING) {
+                        m2ptargetMP4ExtensionRemoved = m2psanitizedTargetMP4UserInput.substring(0, m2psanitizedTargetMP4UserInput.length() - 4);
+                        m2pcheckPath = Paths.get(applicationRoot.resolve("Default Output").resolve(m2ptargetMP4ExtensionRemoved).toString());
+                    } else if (m2ptargetMP4UserInputType == UserInputTypes.PATH_EXISTING) {
+                        String m2ptempFileName = Paths.get(m2psanitizedTargetMP4UserInput).getFileName().toString();
+                        m2ptargetMP4ExtensionRemoved = m2ptempFileName.substring(0, m2ptempFileName.length() - 4);
+                        m2pcheckPath = Paths.get(applicationRoot.resolve("Default Output").resolve(m2ptargetMP4ExtensionRemoved).toString());
                     } else {
-                        createdFolderName = "\"[" + timePrefix + "]\"";
+                        m2pcreatedFolderName = "\"[" + timePrefix + "]\"";
                     }
 
-                    if (!Objects.isNull(checkPath) && !Objects.isNull(targetMP4ExtensionRemoved)) {
-                        if (Files.isDirectory(checkPath)) {
+                    if (!Objects.isNull(m2pcheckPath) && !Objects.isNull(m2ptargetMP4ExtensionRemoved)) {
+                        if (Files.isDirectory(m2pcheckPath)) {
                             // In the case that a directory with target MP4's name already exists in the default folder, the application adds a prefix [Current Date and Time]
-                            createdFolderName = "\"[" + timePrefix + "] " + targetMP4ExtensionRemoved + "\"";
+                            m2pcreatedFolderName = "\"[" + timePrefix + "] " + m2ptargetMP4ExtensionRemoved + "\"";
                         } else {
-                            createdFolderName = "\"" + targetMP4ExtensionRemoved + "\"";
+                            m2pcreatedFolderName = "\"" + m2ptargetMP4ExtensionRemoved + "\"";
                         }
                     }
 
-                    mkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", createdFolderName};
+                    m2pmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", m2pcreatedFolderName};
 
                     ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
-                    tempConsoleBridge.changeCommand(mkdirCommand);
+                    tempConsoleBridge.changeCommand(m2pmkdirCommand);
                     try {
                         tempConsoleBridge.executeCommand(true, tempOutput -> {
                         });
@@ -506,25 +529,25 @@ public class UserInterface {
                     tempConsoleBridge = null;
 
                     // Once the directory has been created, trim the " from createdFolderName, so it may be used in path arguments
-                    createdFolderName = createdFolderName.replace("\"", "");
-                    outputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(createdFolderName).resolve(createdFolderName).toString() + "_%04d.png\"";
+                    m2pcreatedFolderName = m2pcreatedFolderName.replace("\"", "");
+                    m2poutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(m2pcreatedFolderName).resolve(m2pcreatedFolderName).toString() + "_%04d.png\"";
                 }
 
                 // The NAME_NONEXISTENT case is unique because, if the user inputs a name that doesn't exist, it's assumed that the user wants to create a folder with that name
                 // Note that the same cannot be said about PATH_NONEXISTENT, because this runs the risk of creating a directory at an unknown location which the user may not be able to find, whereas other cases will go to the Default Output folder
                 case NAME_NONEXISTENT, NAME_EXISTING -> {
-                    String[] mkdirCommand = {""};
+                    String[] m2pmkdirCommand = {""};
 
-                    if (Files.isDirectory(Paths.get(applicationRoot.resolve("Default Output").resolve(sanitizedOutputLocationUserInput).toString()))) {
-                        createdFolderName = "\"[" + timePrefix + "] " + sanitizedOutputLocationUserInput + "\"";
+                    if (Files.isDirectory(Paths.get(applicationRoot.resolve("Default Output").resolve(m2psanitizedOutputLocationUserInput).toString()))) {
+                        m2pcreatedFolderName = "\"[" + timePrefix + "] " + m2psanitizedOutputLocationUserInput + "\"";
                     } else {
-                        createdFolderName = "\"" + sanitizedOutputLocationUserInput + "\"";
+                        m2pcreatedFolderName = "\"" + m2psanitizedOutputLocationUserInput + "\"";
                     }
 
-                    mkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", createdFolderName};
+                    m2pmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", m2pcreatedFolderName};
 
                     ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
-                    tempConsoleBridge.changeCommand(mkdirCommand);
+                    tempConsoleBridge.changeCommand(m2pmkdirCommand);
                     try {
                         tempConsoleBridge.executeCommand(true, tempOutput -> {
                         });
@@ -533,50 +556,50 @@ public class UserInterface {
                     }
 
                     tempConsoleBridge = null;
-                    createdFolderName = createdFolderName.replace("\"", "");
+                    m2pcreatedFolderName = m2pcreatedFolderName.replace("\"", "");
 
-                    outputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(createdFolderName).resolve(createdFolderName).toString() + "_%04d.png\"";
+                    m2poutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(m2pcreatedFolderName).resolve(m2pcreatedFolderName).toString() + "_%04d.png\"";
                 }
 
                 case PATH_EXISTING -> {
-                    String[] mkdirCommand = {""};
-                    String targetMP4ExtensionRemoved = null;
-                    Path checkPath = null;
+                    String[] m2pmkdirCommand = {""};
+                    String m2ptargetMP4ExtensionRemoved = null;
+                    Path m2pcheckPath = null;
 
-                    if (!Files.isDirectory(Paths.get(sanitizedOutputLocationUserInput))) {
+                    if (!Files.isDirectory(Paths.get(m2psanitizedOutputLocationUserInput))) {
                         SwingUtilities.invokeLater(() -> {
-                            consoleOutputTextArea.setText("Error: The path provided in the Output Location is invalid");
+                            m2pconsoleOutputTextArea.setText("Error: The path provided in the Output Location is invalid");
                         });
 
                         return;
                     }
 
-                    if (targetMP4UserInputType == UserInputTypes.NAME_EXISTING) {
-                        targetMP4ExtensionRemoved = sanitizedTargetMP4UserInput.substring(0, sanitizedTargetMP4UserInput.length() - 4);
-                        checkPath = Paths.get(sanitizedOutputLocationUserInput).resolve(targetMP4ExtensionRemoved);
+                    if (m2ptargetMP4UserInputType == UserInputTypes.NAME_EXISTING) {
+                        m2ptargetMP4ExtensionRemoved = m2psanitizedTargetMP4UserInput.substring(0, m2psanitizedTargetMP4UserInput.length() - 4);
+                        m2pcheckPath = Paths.get(m2psanitizedOutputLocationUserInput).resolve(m2ptargetMP4ExtensionRemoved);
 
-                        if (Files.isDirectory(checkPath)) {
-                            createdFolderName = "\"[" + timePrefix + "] " + targetMP4ExtensionRemoved + "\"";
+                        if (Files.isDirectory(m2pcheckPath)) {
+                            m2pcreatedFolderName = "\"[" + timePrefix + "] " + m2ptargetMP4ExtensionRemoved + "\"";
                         } else {
-                            createdFolderName = "\"" + targetMP4ExtensionRemoved + "\"";
+                            m2pcreatedFolderName = "\"" + m2ptargetMP4ExtensionRemoved + "\"";
                         }
-                    } else if (targetMP4UserInputType == UserInputTypes.PATH_EXISTING) {
-                        String tempFileName = Paths.get(sanitizedTargetMP4UserInput).getFileName().toString();
-                        targetMP4ExtensionRemoved = tempFileName.substring(0, tempFileName.length() - 4);
-                        checkPath = Paths.get(sanitizedOutputLocationUserInput).resolve(targetMP4ExtensionRemoved);
+                    } else if (m2ptargetMP4UserInputType == UserInputTypes.PATH_EXISTING) {
+                        String m2ptempFileName = Paths.get(m2psanitizedTargetMP4UserInput).getFileName().toString();
+                        m2ptargetMP4ExtensionRemoved = m2ptempFileName.substring(0, m2ptempFileName.length() - 4);
+                        m2pcheckPath = Paths.get(m2psanitizedOutputLocationUserInput).resolve(m2ptargetMP4ExtensionRemoved);
 
-                        if (Files.isDirectory(checkPath)) {
-                            createdFolderName = "\"[" + timePrefix + "] " + targetMP4ExtensionRemoved + "\"";
+                        if (Files.isDirectory(m2pcheckPath)) {
+                            m2pcreatedFolderName = "\"[" + timePrefix + "] " + m2ptargetMP4ExtensionRemoved + "\"";
                         } else {
-                            createdFolderName = "\"" + targetMP4ExtensionRemoved + "\"";
+                            m2pcreatedFolderName = "\"" + m2ptargetMP4ExtensionRemoved + "\"";
                         }
                     }
 
-                    mkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", createdFolderName};
+                    m2pmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", m2pcreatedFolderName};
 
                     ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
-                    tempConsoleBridge.changeCommand(mkdirCommand);
-                    tempConsoleBridge.changeDirectory(Paths.get(sanitizedOutputLocationUserInput));
+                    tempConsoleBridge.changeCommand(m2pmkdirCommand);
+                    tempConsoleBridge.changeDirectory(Paths.get(m2psanitizedOutputLocationUserInput));
                     try {
                         tempConsoleBridge.executeCommand(true, tempOutput -> {
                         });
@@ -585,17 +608,17 @@ public class UserInterface {
                     }
 
                     tempConsoleBridge = null;
-                    createdFolderName = createdFolderName.replace("\"", "");
+                    m2pcreatedFolderName = m2pcreatedFolderName.replace("\"", "");
 
-                    outputLocationArgument = "\"" + Paths.get(sanitizedOutputLocationUserInput).resolve(createdFolderName).resolve(createdFolderName) + "_%04d.png\"";
+                    m2poutputLocationArgument = "\"" + Paths.get(m2psanitizedOutputLocationUserInput).resolve(m2pcreatedFolderName).resolve(m2pcreatedFolderName) + "_%04d.png\"";
                 }
             }
 
-            String[] fullCommand = {""};
-            if (desiredFPSCheckBox.isSelected()) {
-                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, "-vf", "\"fps=" + frameSpinner.getValue().toString() + "\"", outputLocationArgument};
+            String[] m2pfullCommand = {""};
+            if (m2pdesiredFPSCheckBox.isSelected()) {
+                m2pfullCommand = new String[]{this.FFMpegExecutablePath, "-i", m2pinputFilePathArgument, "-vf", "\"fps=" + m2pframeSpinner.getValue().toString() + "\"", m2poutputLocationArgument};
             } else {
-                fullCommand = new String[]{this.FFMpegExecutablePath, "-i", inputFilePathArgument, outputLocationArgument};
+                m2pfullCommand = new String[]{this.FFMpegExecutablePath, "-i", m2pinputFilePathArgument, m2poutputLocationArgument};
             }
 
             /*
@@ -606,14 +629,14 @@ public class UserInterface {
             * */
 
             try {
-                executeMP4ToPNGSequenceCommand(fullCommand);
+                m2pExecuteCommand(m2pfullCommand);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
 
-            String[] getFPSCommand = {this.FFMpegExecutablePath, "-i", inputFilePathArgument};
+            String[] m2pgetFPSCommand = {this.FFMpegExecutablePath, "-i", m2pinputFilePathArgument};
             try {
-                executeGetMP4FramerateCommand(getFPSCommand);
+                executeGetMP4FramerateCommand(m2pgetFPSCommand);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -629,18 +652,12 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 0, 0, 100);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.CENTER;
-        panel3.add(confirmButton, constraints);
+        m2pPanel3.add(m2pconfirmButton, constraints);
 
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(e -> {
-//            SwingUtilities.invokeLater(() -> {
-//                System.out.print("Testing: " + outputLocationTextField.getText());
-//                identifyUserInput(outputLocationTextField.getText(), true);
-//            });
-
-            LocalDateTime currentTime = LocalDateTime.now();
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd, HH-mm-ss");
-            System.out.print("\n" + currentTime.format(timeFormatter));
+        JButton m2pcancelButton = new JButton("Cancel");
+        m2pcancelButton.addActionListener(e -> {
+            System.out.print("Closing User Interface...");
+            mainFrame.dispose();
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -653,12 +670,18 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 100, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.CENTER;
-        panel3.add(cancelButton, constraints);
+        m2pPanel3.add(m2pcancelButton, constraints);
+
 
         //==================================================
-        // Part 5 - Deploying the UI
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+        // Part 5 - Creating Separate Frame for PNG Sequence -> MP4 Functionality
+
+
+        //==================================================
+        // Part 6 - Deploying the UI
+
+        mainFrame.setLocationRelativeTo(null);
+        mainFrame.setVisible(true);
     }
 
 
@@ -758,12 +781,12 @@ public class UserInterface {
         return returnString;
     }
 
-    public void executeMP4ToPNGSequenceCommand(String[] inputCommand) throws IOException {
+    public void m2pExecuteCommand(String[] inputCommand) throws IOException {
         this.rootConsoleBridge.changeCommand(inputCommand);
 
         rootConsoleBridge.executeCommand(true, consoleBridgeOutput -> {
             SwingUtilities.invokeLater(() -> {
-                consoleOutputTextArea.append("\n" + consoleBridgeOutput);
+                m2pconsoleOutputTextArea.append("\n" + consoleBridgeOutput);
             });
         });
     }
