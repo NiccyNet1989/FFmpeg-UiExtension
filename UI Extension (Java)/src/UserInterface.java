@@ -19,8 +19,11 @@ public class UserInterface {
     ConsoleBridge rootConsoleBridge;
     JFileChooser fileChooser;
     ImageIcon fileIcon;
-    private JTextField estimatedFpsTextField;
+    private JTextField m2pestimatedFpsTextField;
+    private JTextField p2mestimatedFpsTextField;
     private JTextArea m2pconsoleOutputTextArea;
+    private JTextArea p2mconsoleOutputTextArea;
+
 
     public UserInterface(Path initialDirectory) {
         //==================================================
@@ -51,7 +54,6 @@ public class UserInterface {
         mainFrame.add(cardLayoutContainer);
 
         GridBagConstraints constraints = new GridBagConstraints();
-
 
         // Basic frame components
         MP4toPNGPanel.setLayout(new GridBagLayout());
@@ -373,10 +375,10 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         m2pPanel2.add(m2pfpsLabel, constraints);
 
-        estimatedFpsTextField = new JTextField();
-        estimatedFpsTextField.setPreferredSize(new Dimension(40, 25));
-        estimatedFpsTextField.setEnabled(false);
-        estimatedFpsTextField.setDisabledTextColor(Color.BLACK);
+        m2pestimatedFpsTextField = new JTextField();
+        m2pestimatedFpsTextField.setPreferredSize(new Dimension(40, 25));
+        m2pestimatedFpsTextField.setEnabled(false);
+        m2pestimatedFpsTextField.setDisabledTextColor(Color.BLACK);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 1;
@@ -388,7 +390,7 @@ public class UserInterface {
         constraints.ipady = 0;
         constraints.insets = new Insets(0, 146, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        m2pPanel2.add(estimatedFpsTextField, constraints);
+        m2pPanel2.add(m2pestimatedFpsTextField, constraints);
 
         //==================================================
         // Part 4 - Panel 3
@@ -676,6 +678,532 @@ public class UserInterface {
         //==================================================
         // Part 5 - Creating Separate Frame for PNG Sequence -> MP4 Functionality
 
+        JPanel p2mPanel1 = new JPanel();
+        JPanel p2mPanel2 = new JPanel();
+        JPanel p2mPanel3 = new JPanel();
+        p2mPanel1.setLayout(new GridBagLayout());
+        p2mPanel2.setLayout(new GridBagLayout());
+        p2mPanel3.setLayout(new GridBagLayout());
+        p2mPanel1.setBackground(Color.WHITE);
+        p2mPanel2.setBackground(Color.WHITE);
+        p2mPanel3.setBackground(Color.WHITE);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;      // Position in grid
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.LINE_START;
+        PNGtoMP4Panel.add(p2mPanel1, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        PNGtoMP4Panel.add(p2mPanel2, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;      // Position in grid
+        constraints.gridy = 2;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 2;
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.weightx = 1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.CENTER;
+        PNGtoMP4Panel.add(p2mPanel3, constraints);
+
+
+        JLabel p2mtargetPNGSequenceLabel = new JLabel("Target PNG Sequence Location");
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;
+        constraints.ipady = 0;
+        constraints.insets = new Insets(10, 10, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel1.add(p2mtargetPNGSequenceLabel, constraints);
+
+        JTextField p2mtargetPNGSequenceTextField = new JTextField();
+        p2mtargetPNGSequenceTextField.setPreferredSize(new Dimension(280, 25));
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 3;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.5;
+        constraints.weighty = 0.1;
+        constraints.insets = new Insets(0, 10, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel1.add(p2mtargetPNGSequenceTextField, constraints);
+
+        JButton p2mtargetPNGSequenceFolderButton = new JButton();
+        p2mtargetPNGSequenceFolderButton.setPreferredSize(new Dimension(24, 24));
+        p2mtargetPNGSequenceFolderButton.setIcon(fileIcon);
+        p2mtargetPNGSequenceFolderButton.setBackground(Color.WHITE);
+        p2mtargetPNGSequenceFolderButton.addActionListener(e -> {
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int returnValue = fileChooser.showOpenDialog(PNGtoMP4Panel);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                p2mtargetPNGSequenceTextField.setText(fileChooser.getSelectedFile().toString());
+            }
+        });
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 3;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.5;
+        constraints.weighty = 0.1;
+        constraints.insets = new Insets(0, 289, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel1.add(p2mtargetPNGSequenceFolderButton, constraints);
+
+        JLabel p2mframeSpinnerLabel = new JLabel("Desired FPS (Max 60)");
+        constraints = new GridBagConstraints();
+        constraints.gridx = 2;      // Position in grid
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(10, 212, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel1.add(p2mframeSpinnerLabel, constraints);
+
+        SpinnerModel p2mnumberSpinnerModel = new SpinnerNumberModel(1, 1, 60, 1); // (Initial, min, max, step)
+        JSpinner p2mframeSpinner = new JSpinner(p2mnumberSpinnerModel);
+        p2mframeSpinner.setEnabled(false);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 2;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 242, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel1.add(p2mframeSpinner, constraints);
+
+        JCheckBox p2mdesiredFPSCheckBox = new JCheckBox();
+        p2mdesiredFPSCheckBox.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> {
+                if (p2mdesiredFPSCheckBox.isSelected()) {
+                    p2mframeSpinner.setEnabled(true);
+                } else {
+                    p2mframeSpinner.setEnabled(false);
+                }
+            });
+
+        });
+        p2mdesiredFPSCheckBox.setBackground(Color.WHITE);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 2;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 210, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel1.add(p2mdesiredFPSCheckBox, constraints);
+
+
+        //==================================================
+        // Part 3 - Panel 2
+
+        JLabel p2moutputMP4LocationLabel = new JLabel("Output Location");
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;
+        constraints.ipady = 0;
+        constraints.insets = new Insets(10, 10, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel2.add(p2moutputMP4LocationLabel, constraints);
+
+        JTextField p2moutputMP4LocationTextField = new JTextField();
+        p2moutputMP4LocationTextField.setPreferredSize(new Dimension(280, 25));
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 3;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.5;
+        constraints.weighty = 0.1;
+        constraints.insets = new Insets(0, 10, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel2.add(p2moutputMP4LocationTextField, constraints);
+
+        JButton p2moutputMP4LocationFolderButton = new JButton();
+        p2moutputMP4LocationFolderButton.setPreferredSize(new Dimension(24, 24));
+        p2moutputMP4LocationFolderButton.setIcon(fileIcon);
+        p2moutputMP4LocationFolderButton.setBackground(Color.WHITE);
+        p2moutputMP4LocationFolderButton.addActionListener(e -> {
+            fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int returnValue = fileChooser.showOpenDialog(PNGtoMP4Panel);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                p2moutputMP4LocationLabel.setText(fileChooser.getSelectedFile().toString());
+            }
+        });
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 3;
+        constraints.gridheight = 1;
+        constraints.weightx = 0.5;
+        constraints.weighty = 0.1;
+        constraints.insets = new Insets(0, 289, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel2.add(p2moutputMP4LocationFolderButton, constraints);
+
+//        constraints = new GridBagConstraints();
+//        constraints.gridx = 1;      // Position in grid
+//        constraints.gridy = 0;
+//        constraints.gridwidth = 1;  // Scale of component
+//        constraints.gridheight = 1;
+//        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+//        constraints.weighty = 0.1;
+//        constraints.ipadx = 0;      // Attempts to manually resize the component
+//        constraints.ipady = 0;
+//        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+//        constraints.anchor = GridBagConstraints.LINE_START;
+//        panel2.add(new JPanel(), constraints);
+
+        JLabel p2mfpsLabel = new JLabel("Estimated FPS");
+        constraints = new GridBagConstraints();
+        constraints.gridx = 2;      // Position in grid
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(10, 146, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel2.add(p2mfpsLabel, constraints);
+
+        p2mestimatedFpsTextField = new JTextField();
+        p2mestimatedFpsTextField.setPreferredSize(new Dimension(40, 25));
+        p2mestimatedFpsTextField.setEnabled(false);
+        p2mestimatedFpsTextField.setDisabledTextColor(Color.BLACK);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 2;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 146, 50, 0);
+        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        p2mPanel2.add(p2mestimatedFpsTextField, constraints);
+
+        //==================================================
+        // Part 4 - Panel 3
+
+        p2mconsoleOutputTextArea = new JTextArea();
+        p2mconsoleOutputTextArea.setEditable(false);
+        p2mconsoleOutputTextArea.setLineWrap(true);
+        p2mconsoleOutputTextArea.setWrapStyleWord(true);
+        p2mconsoleOutputTextArea.setDisabledTextColor(Color.BLACK);
+        JScrollPane p2mconsoleOutputScrollPane = new JScrollPane(p2mconsoleOutputTextArea);
+        p2mconsoleOutputScrollPane.setPreferredSize(new Dimension(500, 80));
+        constraints = new GridBagConstraints();
+        constraints.gridx = 1;      // Position in grid
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.PAGE_START;
+        p2mPanel3.add(p2mconsoleOutputScrollPane, constraints);
+
+        JButton p2mconfirmButton = new JButton("Confirm");
+        p2mconfirmButton.addActionListener(e -> {
+            String p2minputFilePathArgument = "";
+            String p2msanitizedTargetPNGSequenceUserInput = p2mtargetPNGSequenceTextField.getText().strip();
+            UserInputTypes p2mtargetPNGSequenceUserInputType = identifyUserInput(p2msanitizedTargetPNGSequenceUserInput, false);
+
+            String p2mcreatedFolderName = null;
+
+            switch (p2mtargetPNGSequenceUserInputType) {
+                case EMPTY -> {
+                    SwingUtilities.invokeLater(() -> {
+                        p2mconsoleOutputTextArea.setText("Please input a file path or the name of an MP4 file you have placed in the Default Input Folder");
+                    });
+                    return;
+                }
+                case PATH_INVALID, PATH_NOT_ABSOLUTE -> {
+                    SwingUtilities.invokeLater(() -> {
+                        p2mconsoleOutputTextArea.setText("Error: Inputted file path is invalid");
+                    });
+                    return;
+                }
+                case PATH_NONEXISTENT -> {
+                    SwingUtilities.invokeLater(() -> {
+                        p2mconsoleOutputTextArea.setText("Error: File path '" + p2mtargetPNGSequenceTextField.getText() + "' not found");
+                    });
+                    return;
+                }
+                case NAME_NONEXISTENT -> {
+                    SwingUtilities.invokeLater(() -> {
+                        p2mconsoleOutputTextArea.setText("Error: File with name '" + p2mtargetPNGSequenceTextField.getText() + "' not found in Default Input folder. (Note: Please include the .mp4 extension)");
+                    });
+                    return;
+                }
+
+                case PATH_EXISTING -> {
+                    if (p2msanitizedTargetPNGSequenceUserInput.endsWith(".mp4")) {
+                        p2minputFilePathArgument = "\"" + p2msanitizedTargetPNGSequenceUserInput + "\"";
+                    } else {
+                        SwingUtilities.invokeLater(() -> {
+                            p2mconsoleOutputTextArea.setText("Error: The provided file path does not refer to an MP4 file");
+                        });
+                        return;
+                    }
+                }
+                case NAME_EXISTING -> {
+                    if (p2msanitizedTargetPNGSequenceUserInput.endsWith(".mp4")) {
+                        p2minputFilePathArgument = applicationRoot.resolve("Default Input").resolve(p2msanitizedTargetPNGSequenceUserInput).toString();
+                    } else {
+                        SwingUtilities.invokeLater(() -> {
+                            p2mconsoleOutputTextArea.setText("Error: The provided file name does not refer to an MP4 file");
+                        });
+                        return;
+                    }
+                }
+
+                case DEFAULT -> {
+                    SwingUtilities.invokeLater(() -> {
+                        p2mconsoleOutputTextArea.setText("Error: An unknown error has occurred");
+                    });
+                    return;
+                }
+            }
+
+
+            String p2moutputLocationArgument = "";
+
+            /*Process input to the outputLocationTextField
+             * Case 1. Empty user input
+             * Case 2. Directory doesn't already exist*/
+            String p2msanitizedOutputLocationUserInput = p2moutputMP4LocationTextField.getText().strip();
+            UserInputTypes p2moutputLocationUserInputType = identifyUserInput(p2msanitizedOutputLocationUserInput, false);
+            LocalDateTime currentTime = LocalDateTime.now();
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd, HH;mm.ss");
+            String timePrefix = currentTime.format(timeFormatter);
+
+            switch (p2moutputLocationUserInputType) {
+                case EMPTY, DEFAULT, PATH_INVALID, PATH_NONEXISTENT, PATH_NOT_ABSOLUTE -> {
+                    String[] p2mmkdirCommand = {""};
+                    String p2mtargetPNGSSequenceExtensionRemoved = null;
+                    Path p2mcheckPath = null;
+
+                    if (p2mtargetPNGSequenceUserInputType == UserInputTypes.NAME_EXISTING) {
+                        p2mtargetPNGSSequenceExtensionRemoved = p2msanitizedTargetPNGSequenceUserInput.substring(0, p2msanitizedTargetPNGSequenceUserInput.length() - 4);
+                        p2mcheckPath = Paths.get(applicationRoot.resolve("Default Output").resolve(p2mtargetPNGSSequenceExtensionRemoved).toString());
+                    } else if (p2mtargetPNGSequenceUserInputType == UserInputTypes.PATH_EXISTING) {
+                        String p2mtempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
+                        p2mtargetPNGSSequenceExtensionRemoved = p2mtempFileName.substring(0, p2mtempFileName.length() - 4);
+                        p2mcheckPath = Paths.get(applicationRoot.resolve("Default Output").resolve(p2mtargetPNGSSequenceExtensionRemoved).toString());
+                    } else {
+                        p2mcreatedFolderName = "\"[" + timePrefix + "]\"";
+                    }
+
+                    if (!Objects.isNull(p2mcheckPath) && !Objects.isNull(p2mtargetPNGSSequenceExtensionRemoved)) {
+                        if (Files.isDirectory(p2mcheckPath)) {
+                            // In the case that a directory with target MP4's name already exists in the default folder, the application adds a prefix [Current Date and Time]
+                            p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2mtargetPNGSSequenceExtensionRemoved + "\"";
+                        } else {
+                            p2mcreatedFolderName = "\"" + p2mtargetPNGSSequenceExtensionRemoved + "\"";
+                        }
+                    }
+
+                    p2mmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", p2mcreatedFolderName};
+
+                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
+                    tempConsoleBridge.changeCommand(p2mmkdirCommand);
+                    try {
+                        tempConsoleBridge.executeCommand(true, tempOutput -> {
+                        });
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    tempConsoleBridge = null;
+
+                    // Once the directory has been created, trim the " from createdFolderName, so it may be used in path arguments
+                    p2mcreatedFolderName = p2mcreatedFolderName.replace("\"", "");
+                    p2moutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName).toString() + "_%04d.png\"";
+                }
+
+                // The NAME_NONEXISTENT case is unique because, if the user inputs a name that doesn't exist, it's assumed that the user wants to create a folder with that name
+                // Note that the same cannot be said about PATH_NONEXISTENT, because this runs the risk of creating a directory at an unknown location which the user may not be able to find, whereas other cases will go to the Default Output folder
+                case NAME_NONEXISTENT, NAME_EXISTING -> {
+                    String[] p2mmkdirCommand = {""};
+
+                    if (Files.isDirectory(Paths.get(applicationRoot.resolve("Default Output").resolve(p2msanitizedOutputLocationUserInput).toString()))) {
+                        p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2msanitizedOutputLocationUserInput + "\"";
+                    } else {
+                        p2mcreatedFolderName = "\"" + p2msanitizedOutputLocationUserInput + "\"";
+                    }
+
+                    p2mmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", p2mcreatedFolderName};
+
+                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
+                    tempConsoleBridge.changeCommand(p2mmkdirCommand);
+                    try {
+                        tempConsoleBridge.executeCommand(true, tempOutput -> {
+                        });
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    tempConsoleBridge = null;
+                    p2mcreatedFolderName = p2mcreatedFolderName.replace("\"", "");
+
+                    p2moutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName).toString() + "_%04d.png\"";
+                }
+
+                case PATH_EXISTING -> {
+                    String[] p2mmkdirCommand = {""};
+                    String p2mtargetPNGSSequenceExtensionRemoved = null;
+                    Path p2mcheckPath = null;
+
+                    if (!Files.isDirectory(Paths.get(p2msanitizedOutputLocationUserInput))) {
+                        SwingUtilities.invokeLater(() -> {
+                            p2mconsoleOutputTextArea.setText("Error: The path provided in the Output Location is invalid");
+                        });
+
+                        return;
+                    }
+
+                    if (p2mtargetPNGSequenceUserInputType == UserInputTypes.NAME_EXISTING) {
+                        p2mtargetPNGSSequenceExtensionRemoved = p2msanitizedTargetPNGSequenceUserInput.substring(0, p2msanitizedTargetPNGSequenceUserInput.length() - 4);
+                        p2mcheckPath = Paths.get(p2msanitizedOutputLocationUserInput).resolve(p2mtargetPNGSSequenceExtensionRemoved);
+
+                        if (Files.isDirectory(p2mcheckPath)) {
+                            p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2mtargetPNGSSequenceExtensionRemoved + "\"";
+                        } else {
+                            p2mcreatedFolderName = "\"" + p2mtargetPNGSSequenceExtensionRemoved + "\"";
+                        }
+                    } else if (p2mtargetPNGSequenceUserInputType == UserInputTypes.PATH_EXISTING) {
+                        String p2mtempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
+                        p2mtargetPNGSSequenceExtensionRemoved = p2mtempFileName.substring(0, p2mtempFileName.length() - 4);
+                        p2mcheckPath = Paths.get(p2msanitizedOutputLocationUserInput).resolve(p2mtargetPNGSSequenceExtensionRemoved);
+
+                        if (Files.isDirectory(p2mcheckPath)) {
+                            p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2mtargetPNGSSequenceExtensionRemoved + "\"";
+                        } else {
+                            p2mcreatedFolderName = "\"" + p2mtargetPNGSSequenceExtensionRemoved + "\"";
+                        }
+                    }
+
+                    p2mmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", p2mcreatedFolderName};
+
+                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
+                    tempConsoleBridge.changeCommand(p2mmkdirCommand);
+                    tempConsoleBridge.changeDirectory(Paths.get(p2msanitizedOutputLocationUserInput));
+                    try {
+                        tempConsoleBridge.executeCommand(true, tempOutput -> {
+                        });
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    tempConsoleBridge = null;
+                    p2mcreatedFolderName = p2mcreatedFolderName.replace("\"", "");
+
+                    p2moutputLocationArgument = "\"" + Paths.get(p2msanitizedOutputLocationUserInput).resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName) + "_%04d.png\"";
+                }
+            }
+
+            String[] p2mfullCommand = {""};
+            if (p2mdesiredFPSCheckBox.isSelected()) {
+                p2mfullCommand = new String[]{this.FFMpegExecutablePath, "-i", p2minputFilePathArgument, "-vf", "\"fps=" + p2mframeSpinner.getValue().toString() + "\"", p2moutputLocationArgument};
+            } else {
+                p2mfullCommand = new String[]{this.FFMpegExecutablePath, "-i", p2minputFilePathArgument, p2moutputLocationArgument};
+            }
+
+            /*
+            System.out.print("\n");
+            for (String arg : fullCommand) {
+                System.out.print(arg + " ");
+            }
+            * */
+
+            try {
+                p2mExecuteCommand(p2mfullCommand);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        constraints = new GridBagConstraints();
+        constraints.gridx = 1;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 0, 0, 100);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.CENTER;
+        p2mPanel3.add(p2mconfirmButton, constraints);
+
+        JButton p2mcancelButton = new JButton("Cancel");
+        p2mcancelButton.addActionListener(e -> {
+            System.out.print("Closing User Interface...");
+            mainFrame.dispose();
+        });
+        constraints = new GridBagConstraints();
+        constraints.gridx = 1;      // Position in grid
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;  // Scale of component
+        constraints.gridheight = 1;
+        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
+        constraints.weighty = 0.1;
+        constraints.ipadx = 0;      // Attempts to manually resize the component
+        constraints.ipady = 0;
+        constraints.insets = new Insets(0, 100, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.anchor = GridBagConstraints.CENTER;
+        p2mPanel3.add(p2mcancelButton, constraints);
 
         //==================================================
         // Part 6 - Deploying the UI
@@ -791,6 +1319,16 @@ public class UserInterface {
         });
     }
 
+    public void p2mExecuteCommand(String[] inputCommand) throws IOException {
+        this.rootConsoleBridge.changeCommand(inputCommand);
+
+        rootConsoleBridge.executeCommand(true, consoleBridgeOutput -> {
+            SwingUtilities.invokeLater(() -> {
+                p2mconsoleOutputTextArea.append("\n" + consoleBridgeOutput);
+            });
+        });
+    }
+
     public void executeGetMP4FramerateCommand(String[] inputCommand) throws IOException {
         ConsoleBridge tempConsoleBridge = new ConsoleBridge(this.FFmpegPath);
 
@@ -805,7 +1343,7 @@ public class UserInterface {
                     for (String item : tempOutput) {
                         if (item.contains("fps")) {
                             SwingUtilities.invokeLater(() -> {
-                                this.estimatedFpsTextField.setText(item.replaceAll("[^0-9]", ""));
+                                this.m2pestimatedFpsTextField.setText(item.replaceAll("[^0-9]", ""));
                             });
                         }
                     }
