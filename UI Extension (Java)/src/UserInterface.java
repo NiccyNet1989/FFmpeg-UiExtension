@@ -14,7 +14,7 @@ public class UserInterface {
     JPanel MP4toPNGPanel = new JPanel();
     JPanel PNGtoMP4Panel = new JPanel();
     Path applicationRoot;
-    Path FFmpegPath;
+    Path FFmpegDirectory;
     String FFMpegExecutablePath;
     ConsoleBridge rootConsoleBridge;
     JFileChooser fileChooser;
@@ -25,19 +25,19 @@ public class UserInterface {
     private JTextArea p2mconsoleOutputTextArea;
 
 
-    public UserInterface(Path initialDirectory) {
+    public UserInterface(Path applicationRoot) {
         //==================================================
         // Part 1 - Base Frame Development
+        System.out.print("\nAttempting to create user interface...");
 
-        System.out.print("Attempting to create user interface...");
+        // The UI keeps track of the application's root, and the location of "FFmpeg.exe" and its parent directory. This may be used for reference.
+        this.applicationRoot = applicationRoot;
+        this.FFmpegDirectory = applicationRoot.resolve("bin");
+        this.FFMpegExecutablePath = "\"" + FFmpegDirectory.resolve("ffmpeg.exe") + "\"";
 
-        // The UI keeps track of the application's root, and the location of FFmpeg. This may be used for reference.
-        this.applicationRoot = Paths.get(System.getProperty("user.dir")).getParent();
-        this.FFmpegPath = Paths.get(System.getProperty("user.dir")).getParent().resolve("bin");
-        this.FFMpegExecutablePath = "\"" + Paths.get(System.getProperty("user.dir")).getParent().resolve("bin").resolve("ffmpeg.exe").toString() + "\"";
         this.fileIcon = new ImageIcon(Paths.get(System.getProperty("user.dir")).resolve("Folder Icon.png").toString());
 
-        this.rootConsoleBridge = new ConsoleBridge(initialDirectory);
+        this.rootConsoleBridge = new ConsoleBridge(applicationRoot);
         this.fileChooser = new JFileChooser();
 
         JFrame mainFrame = new JFrame("FFmpeg UI Extension");
@@ -174,8 +174,11 @@ public class UserInterface {
 
 
         //==================================================
-        // Part 2 - Panel 1
-
+        //==================================================
+        //==================================================
+        //==================================================
+        //==================================================
+        // Part 2 - MP4 -> PNG Panel, Panel 1
         JLabel m2ptargetMP4Label = new JLabel("Target MP4");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -296,7 +299,11 @@ public class UserInterface {
 
 
         //==================================================
-        // Part 3 - Panel 2
+        //==================================================
+        //==================================================
+        //==================================================
+        //==================================================
+        // Part 3 - MP4 -> PNG Panel, Panel 2
 
         JLabel m2poutputLocationLabel = new JLabel("Output Location");
         constraints = new GridBagConstraints();
@@ -392,8 +399,13 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         m2pPanel2.add(m2pestimatedFpsTextField, constraints);
 
+
         //==================================================
-        // Part 4 - Panel 3
+        //==================================================
+        //==================================================
+        //==================================================
+        //==================================================
+        // Part 4 - MP4 -> PNG Panel, Panel 3
 
         m2pconsoleOutputTextArea = new JTextArea();
 //        consoleOutputTextArea.setPreferredSize(new Dimension(500, 80));
@@ -676,6 +688,10 @@ public class UserInterface {
 
 
         //==================================================
+        //==================================================
+        //==================================================
+        //==================================================
+        //==================================================
         // Part 5 - Creating Separate Frame for PNG Sequence -> MP4 Functionality
 
         JPanel p2mPanel1 = new JPanel();
@@ -728,7 +744,8 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.CENTER;
         PNGtoMP4Panel.add(p2mPanel3, constraints);
 
-
+        //==================================================
+        //PNG -> MP4 Panel, Panel 1
         JLabel p2mtargetPNGSequenceLabel = new JLabel("Target PNG Sequence Location");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -835,7 +852,7 @@ public class UserInterface {
 
 
         //==================================================
-        // Part 3 - Panel 2
+        // PNG -> MP4 Panel, Panel 2
 
         JLabel p2moutputMP4LocationLabel = new JLabel("Output Location");
         constraints = new GridBagConstraints();
@@ -932,7 +949,7 @@ public class UserInterface {
         p2mPanel2.add(p2mestimatedFpsTextField, constraints);
 
         //==================================================
-        // Part 4 - Panel 3
+        // PNG -> MP4 Panel, Panel 3
 
         p2mconsoleOutputTextArea = new JTextArea();
         p2mconsoleOutputTextArea.setEditable(false);
@@ -1205,6 +1222,11 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.CENTER;
         p2mPanel3.add(p2mcancelButton, constraints);
 
+
+        //==================================================
+        //==================================================
+        //==================================================
+        //==================================================
         //==================================================
         // Part 6 - Deploying the UI
 
@@ -1330,10 +1352,10 @@ public class UserInterface {
     }
 
     public void executeGetMP4FramerateCommand(String[] inputCommand) throws IOException {
-        ConsoleBridge tempConsoleBridge = new ConsoleBridge(this.FFmpegPath);
+        ConsoleBridge tempConsoleBridge = new ConsoleBridge(this.FFmpegDirectory);
 
         tempConsoleBridge.changeCommand(inputCommand);
-        tempConsoleBridge.changeDirectory(this.FFmpegPath);
+        tempConsoleBridge.changeDirectory(this.FFmpegDirectory);
 
         tempConsoleBridge.executeCommand(false, consoleBridgeOutput -> {
             SwingUtilities.invokeLater(() -> {
