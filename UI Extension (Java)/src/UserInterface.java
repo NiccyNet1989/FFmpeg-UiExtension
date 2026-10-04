@@ -20,7 +20,7 @@ public class UserInterface {
     JFileChooser fileChooser;
     ImageIcon fileIcon;
     private JTextField m2pestimatedFpsTextField;
-    private JTextField p2mestimatedFpsTextField;
+    private JTextField p2moutputFpsTextField;
     private JTextArea m2pconsoleOutputTextArea;
     private JTextArea p2mconsoleOutputTextArea;
 
@@ -382,7 +382,7 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         m2pPanel2.add(m2pfpsLabel, constraints);
 
-        m2pestimatedFpsTextField = new JTextField();
+        m2pestimatedFpsTextField = new JTextField("0");
         m2pestimatedFpsTextField.setPreferredSize(new Dimension(40, 25));
         m2pestimatedFpsTextField.setEnabled(false);
         m2pestimatedFpsTextField.setDisabledTextColor(Color.BLACK);
@@ -746,7 +746,7 @@ public class UserInterface {
 
         //==================================================
         //PNG -> MP4 Panel, Panel 1
-        JLabel p2mtargetPNGSequenceLabel = new JLabel("Target PNG Sequence Location");
+        JLabel p2mtargetPNGSequenceLabel = new JLabel("Target PNG Sequence");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -795,7 +795,7 @@ public class UserInterface {
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
         p2mPanel1.add(p2mtargetPNGSequenceFolderButton, constraints);
 
-        JLabel p2mframeSpinnerLabel = new JLabel("Desired FPS (Max 60)");
+        JLabel p2mpreviousMp4FPSLabel = new JLabel("Previous MP4 FPS");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -805,38 +805,23 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 212, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 135, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        p2mPanel1.add(p2mframeSpinnerLabel, constraints);
+        p2mPanel1.add(p2mpreviousMp4FPSLabel, constraints);
 
-        SpinnerModel p2mnumberSpinnerModel = new SpinnerNumberModel(1, 1, 60, 1); // (Initial, min, max, step)
-        JSpinner p2mframeSpinner = new JSpinner(p2mnumberSpinnerModel);
-        p2mframeSpinner.setEnabled(false);
-        constraints = new GridBagConstraints();
-        constraints.gridx = 2;      // Position in grid
-        constraints.gridy = 1;
-        constraints.gridwidth = 1;  // Scale of component
-        constraints.gridheight = 1;
-        constraints.weightx = 0.1;  // Adjusts how much empty space this component is given when window is resized
-        constraints.weighty = 0.1;
-        constraints.ipadx = 0;      // Attempts to manually resize the component
-        constraints.ipady = 0;
-        constraints.insets = new Insets(0, 242, 50, 0);
-        constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        p2mPanel1.add(p2mframeSpinner, constraints);
-
-        JCheckBox p2mdesiredFPSCheckBox = new JCheckBox();
-        p2mdesiredFPSCheckBox.addActionListener(e -> {
-            SwingUtilities.invokeLater(() -> {
-                if (p2mdesiredFPSCheckBox.isSelected()) {
-                    p2mframeSpinner.setEnabled(true);
-                } else {
-                    p2mframeSpinner.setEnabled(false);
+        JTextField p2mpreviousMP4FPSTextArea = new JTextField();
+        operationsPNGSequencetoMP4.addActionListener(e -> {
+            if (!m2pestimatedFpsTextField.equals("")) {
+                if (Integer.valueOf(m2pestimatedFpsTextField.getText().toString()) > 0) {
+                    SwingUtilities.invokeLater(() -> {
+                        p2mpreviousMP4FPSTextArea.setText(m2pestimatedFpsTextField.getText());
+                    });
                 }
-            });
-
+            }
         });
-        p2mdesiredFPSCheckBox.setBackground(Color.WHITE);
+        p2mpreviousMP4FPSTextArea.setPreferredSize(new Dimension(40, 25));
+        p2mpreviousMP4FPSTextArea.setEnabled(false);
+        p2mpreviousMP4FPSTextArea.setDisabledTextColor(Color.BLACK);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 1;
@@ -846,15 +831,16 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 210, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(0, 135, 50, 0);
+//        constraints.insets = new Insets(0, 0, 0, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        p2mPanel1.add(p2mdesiredFPSCheckBox, constraints);
+        p2mPanel1.add(p2mpreviousMP4FPSTextArea, constraints);
 
 
         //==================================================
         // PNG -> MP4 Panel, Panel 2
 
-        JLabel p2moutputMP4LocationLabel = new JLabel("Output Location");
+        JLabel p2moutputMP4LocationLabel = new JLabel("Output MP4 Location");
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -890,7 +876,7 @@ public class UserInterface {
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int returnValue = fileChooser.showOpenDialog(PNGtoMP4Panel);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
-                p2moutputMP4LocationLabel.setText(fileChooser.getSelectedFile().toString());
+                p2moutputMP4LocationTextField.setText(fileChooser.getSelectedFile().toString());
             }
         });
         constraints = new GridBagConstraints();
@@ -917,7 +903,7 @@ public class UserInterface {
 //        constraints.anchor = GridBagConstraints.LINE_START;
 //        panel2.add(new JPanel(), constraints);
 
-        JLabel p2mfpsLabel = new JLabel("Estimated FPS");
+        JLabel p2moutputFpsLabel = new JLabel("Output FPS (Max 200)");
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 0;
@@ -927,14 +913,12 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(10, 146, 0, 0);   // Insets = (Top, Left, Bottom, Right)
+        constraints.insets = new Insets(10, 158, 0, 0);   // Insets = (Top, Left, Bottom, Right)
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        p2mPanel2.add(p2mfpsLabel, constraints);
+        p2mPanel2.add(p2moutputFpsLabel, constraints);
 
-        p2mestimatedFpsTextField = new JTextField();
-        p2mestimatedFpsTextField.setPreferredSize(new Dimension(40, 25));
-        p2mestimatedFpsTextField.setEnabled(false);
-        p2mestimatedFpsTextField.setDisabledTextColor(Color.BLACK);
+        SpinnerModel p2mnumberSpinnerModel = new SpinnerNumberModel(30, 1, 200, 1); // (Initial, min, max, step)
+        JSpinner p2mframeSpinner = new JSpinner(p2mnumberSpinnerModel);
         constraints = new GridBagConstraints();
         constraints.gridx = 2;      // Position in grid
         constraints.gridy = 1;
@@ -944,9 +928,9 @@ public class UserInterface {
         constraints.weighty = 0.1;
         constraints.ipadx = 0;      // Attempts to manually resize the component
         constraints.ipady = 0;
-        constraints.insets = new Insets(0, 146, 50, 0);
+        constraints.insets = new Insets(0, 160, 50, 0);
         constraints.anchor = GridBagConstraints.FIRST_LINE_START;
-        p2mPanel2.add(p2mestimatedFpsTextField, constraints);
+        p2mPanel2.add(p2mframeSpinner, constraints);
 
         //==================================================
         // PNG -> MP4 Panel, Panel 3
@@ -1172,11 +1156,6 @@ public class UserInterface {
             }
 
             String[] p2mfullCommand = {""};
-            if (p2mdesiredFPSCheckBox.isSelected()) {
-                p2mfullCommand = new String[]{this.FFMpegExecutablePath, "-i", p2minputFilePathArgument, "-vf", "\"fps=" + p2mframeSpinner.getValue().toString() + "\"", p2moutputLocationArgument};
-            } else {
-                p2mfullCommand = new String[]{this.FFMpegExecutablePath, "-i", p2minputFilePathArgument, p2moutputLocationArgument};
-            }
 
             /*
             System.out.print("\n");
@@ -1206,7 +1185,7 @@ public class UserInterface {
 
         JButton p2mcancelButton = new JButton("Cancel");
         p2mcancelButton.addActionListener(e -> {
-            System.out.print("Closing User Interface...");
+            System.out.print("\nClosing User Interface...");
             mainFrame.dispose();
         });
         constraints = new GridBagConstraints();
