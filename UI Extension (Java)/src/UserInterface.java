@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UserInterface {
     JPanel MP4toPNGPanel = new JPanel();
@@ -962,6 +964,9 @@ public class UserInterface {
             String p2msanitizedTargetPNGSequenceUserInput = p2mtargetPNGSequenceTextField.getText().strip();
             UserInputTypes p2mtargetPNGSequenceUserInputType = identifyUserInput(p2msanitizedTargetPNGSequenceUserInput, false);
 
+            Pattern contains4DigitSequencePattern = Pattern.compile("\\d{4}");
+            Matcher patternMatcher;
+
             switch (p2mtargetPNGSequenceUserInputType) {
                 case EMPTY -> {
                     SwingUtilities.invokeLater(() -> {
@@ -1014,40 +1019,32 @@ public class UserInterface {
                             p2minputFilePathArgument = "\"" + basePath.resolve(inputtedDirectoryName + " %04d.png") + "\"";
                         } else if (Files.exists(basePath.resolve("0001.png"))) {
                             p2minputFilePathArgument = "\"" + basePath.resolve("%04d.png") + "\"";
-                        }
-
-//                        if (Files.exists(Paths.get(p2msanitizedTargetPNGSequenceUserInput).resolve(Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName() + "_0001.png"))) {
-//                            p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).resolve(Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName()) + "_%04d.png" + "\"";
-//                        } else {
-//                            p2minputFilePathArgument = "\"" + p2msanitizedTargetPNGSequenceUserInput + "%04d.png" + "\"";
-//                        }
-                    } else if (Files.isRegularFile(Paths.get(p2msanitizedTargetPNGSequenceUserInput))) {
-                        // Case 2 - User inputs a path to a file
-                        String tempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
-                        if (tempFileName.endsWith(".png")) {
-                            String tempFileNameNoExtension = tempFileName.substring(0, tempFileName.length() - 4);
-
-                            try {
-                                String tempFileNameNoExtensionLast4Digits = tempFileNameNoExtension.substring(tempFileNameNoExtension.length() - 3, tempFileNameNoExtension.length());
-                                Integer.parseInt(tempFileNameNoExtensionLast4Digits);
-
-                                p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().resolve(tempFileNameNoExtension.substring(0, tempFileNameNoExtension.length() - 4) + "%04d.png") + "\"";
-
-//                                if (tempFileNameNoExtensionLast4Digits.equals(tempFileNameNoExtension)) {
-//                                    p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().resolve("%04d.png") + "\"";
-//                                } else {
-//                                    p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().resolve(tempFileNameNoExtension.substring(0, tempFileNameNoExtension.length() - 4)).resolve("%04d.png") + "\"";
-//                                }
-                            } catch (NumberFormatException | IndexOutOfBoundsException e1) {
-                                SwingUtilities.invokeLater(() -> {
-                                    p2mconsoleOutputTextArea.setText("Error: The provided PNG File must be sequenced via 4 digit numbers\nEx: image0001.png, image0002.png, etc...");
-                                });
-
-                                return;
-                            }
                         } else {
                             SwingUtilities.invokeLater(() -> {
+                                p2mconsoleOutputTextArea.setText("Error: Provided directory does not have a PNG Sequence that can be located");
+                            });
+                        }
+
+
+                        // Case 2 - User inputs a path to a file
+                    } else if (Files.isRegularFile(Paths.get(p2msanitizedTargetPNGSequenceUserInput))) {
+                        String tempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
+                        if (!tempFileName.endsWith(".png")) {
+                            SwingUtilities.invokeLater(() -> {
                                 p2mconsoleOutputTextArea.setText("Error: The provided file is not a PNG file");
+                            });
+                            return;
+                        }
+
+                        String tempFileNameNoExtension = tempFileName.substring(0, tempFileName.length() - 4);
+                        String tempFileNameNoExtensionLast4Digits = tempFileNameNoExtension.substring(tempFileNameNoExtension.length() - 4, tempFileNameNoExtension.length());
+//                                System.out.print("\ntempFileName: " + tempFileName + "\ntempFileNameNoExtension: " + tempFileNameNoExtension + "\ntempFileNameNoExtensionLast4Digits: " + tempFileNameNoExtensionLast4Digits+"\n\n");
+                        patternMatcher = contains4DigitSequencePattern.matcher(tempFileNameNoExtensionLast4Digits);
+                        if (patternMatcher.find()) {
+                            p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().resolve(tempFileNameNoExtension.substring(0, tempFileNameNoExtension.length() - 4) + "%04d.png") + "\"";
+                        } else {
+                            SwingUtilities.invokeLater(() -> {
+                                p2mconsoleOutputTextArea.setText("Error: The provided PNG File must be sequenced via 4 digit numbers\nEx: image0001.png, image0002.png, etc...");
                             });
                             return;
                         }
@@ -1062,14 +1059,37 @@ public class UserInterface {
                 }
 
                 case NAME_EXISTING -> {
-                    if (p2msanitizedTargetPNGSequenceUserInput.endsWith(".mp4")) {
-                        p2minputFilePathArgument = applicationRoot.resolve("Default Input").resolve(p2msanitizedTargetPNGSequenceUserInput).toString();
+                    Path defaultInputFolderPath = applicationRoot.resolve("Default Input");
+                    Path checkPath = defaultInputFolderPath.resolve(p2msanitizedTargetPNGSequenceUserInput);
+
+                    if (!Files.exists(checkPath)) {
+                        SwingUtilities.invokeLater(() -> {
+                            p2mconsoleOutputTextArea.setText("Error: A file with the name \"" + p2msanitizedTargetPNGSequenceUserInput + " \" does not exist in the Default Input folder");
+                        });
+                    }
+
+                    String tempFileName = checkPath.getFileName().toString();
+                    if (tempFileName.endsWith(".png")) {
+                        String tempFileNameNoExtension = tempFileName.substring(0, tempFileName.length() - 4);
+                        String tempFileNameNoExtensionLast4Digits = tempFileNameNoExtension.substring(tempFileNameNoExtension.length() - 4, tempFileNameNoExtension.length());
+                        patternMatcher = contains4DigitSequencePattern.matcher(tempFileNameNoExtensionLast4Digits);
+
+//                        System.out.print("\ntempFileName: " + tempFileName + "\ntempFileNameNoExtension: " + tempFileNameNoExtension + "\ntempFileNameNoExtensionLast4Digits: " + tempFileNameNoExtensionLast4Digits+"\n\n");
+                        if (patternMatcher.find()) {
+                            p2minputFilePathArgument = "\"" + defaultInputFolderPath.resolve(tempFileNameNoExtension.substring(0, tempFileNameNoExtension.length() - 4) + "%04d.png") + "\"";
+                        } else {
+                            SwingUtilities.invokeLater(() -> {
+                                p2mconsoleOutputTextArea.setText("Error: The provided file name does not contain a 4 digit sequence\nEx: image0001.png, image0002.png, etc...");
+                            });
+                        }
                     } else {
                         SwingUtilities.invokeLater(() -> {
-                            p2mconsoleOutputTextArea.setText("Error: The provided file name does not refer to an MP4 file");
+                            p2mconsoleOutputTextArea.setText("Error: The provided file name does not refer to a PNG File");
                         });
                         return;
                     }
+
+                    System.out.print("\n" + p2minputFilePathArgument);
                 }
 
                 case DEFAULT -> {
