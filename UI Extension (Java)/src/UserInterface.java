@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Objects;
 
 public class UserInterface {
@@ -778,7 +779,7 @@ public class UserInterface {
         p2mtargetPNGSequenceFolderButton.setIcon(fileIcon);
         p2mtargetPNGSequenceFolderButton.setBackground(Color.WHITE);
         p2mtargetPNGSequenceFolderButton.addActionListener(e -> {
-            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             int returnValue = fileChooser.showOpenDialog(PNGtoMP4Panel);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 p2mtargetPNGSequenceTextField.setText(fileChooser.getSelectedFile().toString());
@@ -961,12 +962,10 @@ public class UserInterface {
             String p2msanitizedTargetPNGSequenceUserInput = p2mtargetPNGSequenceTextField.getText().strip();
             UserInputTypes p2mtargetPNGSequenceUserInputType = identifyUserInput(p2msanitizedTargetPNGSequenceUserInput, false);
 
-            String p2mcreatedFolderName = null;
-
             switch (p2mtargetPNGSequenceUserInputType) {
                 case EMPTY -> {
                     SwingUtilities.invokeLater(() -> {
-                        p2mconsoleOutputTextArea.setText("Please input a file path or the name of an MP4 file you have placed in the Default Input Folder");
+                        p2mconsoleOutputTextArea.setText("Please input a file path to a directory containing the desired PNG Sequence for MP4 Conversion, or the file path to a PNG in a directory.\nAdditionally, you can input the name of a PNG Sequence you have placed in the Default Input Folder");
                     });
                     return;
                 }
@@ -984,21 +983,84 @@ public class UserInterface {
                 }
                 case NAME_NONEXISTENT -> {
                     SwingUtilities.invokeLater(() -> {
-                        p2mconsoleOutputTextArea.setText("Error: File with name '" + p2mtargetPNGSequenceTextField.getText() + "' not found in Default Input folder. (Note: Please include the .mp4 extension)");
+                        p2mconsoleOutputTextArea.setText("Error: PNG Sequence with name '" + p2mtargetPNGSequenceTextField.getText() + "' not found in Default Input folder. (Note: Please include the .png extension)");
                     });
                     return;
                 }
 
                 case PATH_EXISTING -> {
-                    if (p2msanitizedTargetPNGSequenceUserInput.endsWith(".mp4")) {
-                        p2minputFilePathArgument = "\"" + p2msanitizedTargetPNGSequenceUserInput + "\"";
+                    Path basePath = Paths.get(p2msanitizedTargetPNGSequenceUserInput);
+                    String inputtedDirectoryName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
+                    /*
+                    Possible Cases
+                    1. User inputs a path to a directory
+                        It is assumed that the directory shares the same name as the PNG Sequence, since there is no good way to hunt for the correct PNG Sequence in the directory otherwise
+                    2. User inputs a path to a file
+                        The name of the file will be used for the base of the PNG Sequence.
+                    * */
+
+                    // Case 1 - User inputs an existing directory
+                    if (Files.isDirectory(Paths.get(p2msanitizedTargetPNGSequenceUserInput))) {
+                        // The application will check for various common possible names for a PNG sequence based on the directory name
+                        // 1. Directory name matches PNG Sequence base name
+                        // 2. PNG file names match directory name, but with a separator between the sequence numbers. For example: "Image_0001.png" or "Image 0001.png"
+                        // 3. PNG files are only numerical sequence values. For example: "0001.png", "0002.png"
+
+                        if (Files.exists(basePath.resolve(inputtedDirectoryName + "0001.png"))) {
+                            p2minputFilePathArgument = "\"" + basePath.resolve(inputtedDirectoryName + "%04d.png") + "\"";
+                        } else if (Files.exists(basePath.resolve(inputtedDirectoryName + "_0001.png"))) {
+                            p2minputFilePathArgument = "\"" + basePath.resolve(inputtedDirectoryName + "_%04d.png") + "\"";
+                        } else if (Files.exists(basePath.resolve(inputtedDirectoryName + " 0001.png"))) {
+                            p2minputFilePathArgument = "\"" + basePath.resolve(inputtedDirectoryName + " %04d.png") + "\"";
+                        } else if (Files.exists(basePath.resolve("0001.png"))) {
+                            p2minputFilePathArgument = "\"" + basePath.resolve("%04d.png") + "\"";
+                        }
+
+//                        if (Files.exists(Paths.get(p2msanitizedTargetPNGSequenceUserInput).resolve(Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName() + "_0001.png"))) {
+//                            p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).resolve(Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName()) + "_%04d.png" + "\"";
+//                        } else {
+//                            p2minputFilePathArgument = "\"" + p2msanitizedTargetPNGSequenceUserInput + "%04d.png" + "\"";
+//                        }
+                    } else if (Files.isRegularFile(Paths.get(p2msanitizedTargetPNGSequenceUserInput))) {
+                        // Case 2 - User inputs a path to a file
+                        String tempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
+                        if (tempFileName.endsWith(".png")) {
+                            String tempFileNameNoExtension = tempFileName.substring(0, tempFileName.length() - 4);
+
+                            try {
+                                String tempFileNameNoExtensionLast4Digits = tempFileNameNoExtension.substring(tempFileNameNoExtension.length() - 3, tempFileNameNoExtension.length());
+                                Integer.parseInt(tempFileNameNoExtensionLast4Digits);
+
+                                p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().resolve(tempFileNameNoExtension.substring(0, tempFileNameNoExtension.length() - 4) + "%04d.png") + "\"";
+
+//                                if (tempFileNameNoExtensionLast4Digits.equals(tempFileNameNoExtension)) {
+//                                    p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().resolve("%04d.png") + "\"";
+//                                } else {
+//                                    p2minputFilePathArgument = "\"" + Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().resolve(tempFileNameNoExtension.substring(0, tempFileNameNoExtension.length() - 4)).resolve("%04d.png") + "\"";
+//                                }
+                            } catch (NumberFormatException | IndexOutOfBoundsException e1) {
+                                SwingUtilities.invokeLater(() -> {
+                                    p2mconsoleOutputTextArea.setText("Error: The provided PNG File must be sequenced via 4 digit numbers\nEx: image0001.png, image0002.png, etc...");
+                                });
+
+                                return;
+                            }
+                        } else {
+                            SwingUtilities.invokeLater(() -> {
+                                p2mconsoleOutputTextArea.setText("Error: The provided file is not a PNG file");
+                            });
+                            return;
+                        }
                     } else {
                         SwingUtilities.invokeLater(() -> {
-                            p2mconsoleOutputTextArea.setText("Error: The provided file path does not refer to an MP4 file");
+                            p2mconsoleOutputTextArea.setText("Error: The provided file path does not refer to a directory, or a PNG in a directory with a sequence");
                         });
                         return;
                     }
+
+                    System.out.print("\n" + p2minputFilePathArgument);
                 }
+
                 case NAME_EXISTING -> {
                     if (p2msanitizedTargetPNGSequenceUserInput.endsWith(".mp4")) {
                         p2minputFilePathArgument = applicationRoot.resolve("Default Input").resolve(p2msanitizedTargetPNGSequenceUserInput).toString();
@@ -1030,80 +1092,30 @@ public class UserInterface {
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd, HH;mm.ss");
             String timePrefix = currentTime.format(timeFormatter);
 
+            String outputMP4Name = null;
+            if (Files.isDirectory(Paths.get(p2msanitizedTargetPNGSequenceUserInput))) {
+                outputMP4Name = Paths.get(p2msanitizedTargetPNGSequenceUserInput).toString();
+            } else if (Files.isRegularFile(Paths.get(p2msanitizedOutputLocationUserInput))) {
+                outputMP4Name = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getParent().toString();
+            }
+
             switch (p2moutputLocationUserInputType) {
                 case EMPTY, DEFAULT, PATH_INVALID, PATH_NONEXISTENT, PATH_NOT_ABSOLUTE -> {
-                    String[] p2mmkdirCommand = {""};
                     String p2mtargetPNGSSequenceExtensionRemoved = null;
                     Path p2mcheckPath = null;
 
-                    if (p2mtargetPNGSequenceUserInputType == UserInputTypes.NAME_EXISTING) {
-                        p2mtargetPNGSSequenceExtensionRemoved = p2msanitizedTargetPNGSequenceUserInput.substring(0, p2msanitizedTargetPNGSequenceUserInput.length() - 4);
-                        p2mcheckPath = Paths.get(applicationRoot.resolve("Default Output").resolve(p2mtargetPNGSSequenceExtensionRemoved).toString());
-                    } else if (p2mtargetPNGSequenceUserInputType == UserInputTypes.PATH_EXISTING) {
-                        String p2mtempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
-                        p2mtargetPNGSSequenceExtensionRemoved = p2mtempFileName.substring(0, p2mtempFileName.length() - 4);
-                        p2mcheckPath = Paths.get(applicationRoot.resolve("Default Output").resolve(p2mtargetPNGSSequenceExtensionRemoved).toString());
-                    } else {
-                        p2mcreatedFolderName = "\"[" + timePrefix + "]\"";
-                    }
-
-                    if (!Objects.isNull(p2mcheckPath) && !Objects.isNull(p2mtargetPNGSSequenceExtensionRemoved)) {
-                        if (Files.isDirectory(p2mcheckPath)) {
-                            // In the case that a directory with target MP4's name already exists in the default folder, the application adds a prefix [Current Date and Time]
-                            p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2mtargetPNGSSequenceExtensionRemoved + "\"";
-                        } else {
-                            p2mcreatedFolderName = "\"" + p2mtargetPNGSSequenceExtensionRemoved + "\"";
-                        }
-                    }
-
-                    p2mmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", p2mcreatedFolderName};
-
-                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
-                    tempConsoleBridge.changeCommand(p2mmkdirCommand);
-                    try {
-                        tempConsoleBridge.executeCommand(true, tempOutput -> {
-                        });
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
-
-                    tempConsoleBridge = null;
-
-                    // Once the directory has been created, trim the " from createdFolderName, so it may be used in path arguments
-                    p2mcreatedFolderName = p2mcreatedFolderName.replace("\"", "");
-                    p2moutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName).toString() + "_%04d.png\"";
+//                    p2moutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName).toString() + "_%04d.png\"";
                 }
 
-                // The NAME_NONEXISTENT case is unique because, if the user inputs a name that doesn't exist, it's assumed that the user wants to create a folder with that name
-                // Note that the same cannot be said about PATH_NONEXISTENT, because this runs the risk of creating a directory at an unknown location which the user may not be able to find, whereas other cases will go to the Default Output folder
+
                 case NAME_NONEXISTENT, NAME_EXISTING -> {
-                    String[] p2mmkdirCommand = {""};
+                    String p2mtargetPNGSSequenceExtensionRemoved = null;
+                    Path p2mcheckPath = null;
 
-                    if (Files.isDirectory(Paths.get(applicationRoot.resolve("Default Output").resolve(p2msanitizedOutputLocationUserInput).toString()))) {
-                        p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2msanitizedOutputLocationUserInput + "\"";
-                    } else {
-                        p2mcreatedFolderName = "\"" + p2msanitizedOutputLocationUserInput + "\"";
-                    }
-
-                    p2mmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", p2mcreatedFolderName};
-
-                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
-                    tempConsoleBridge.changeCommand(p2mmkdirCommand);
-                    try {
-                        tempConsoleBridge.executeCommand(true, tempOutput -> {
-                        });
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
-
-                    tempConsoleBridge = null;
-                    p2mcreatedFolderName = p2mcreatedFolderName.replace("\"", "");
-
-                    p2moutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName).toString() + "_%04d.png\"";
+//                    p2moutputLocationArgument = "\"" + applicationRoot.resolve("Default Output").resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName).toString() + "_%04d.png\"";
                 }
 
                 case PATH_EXISTING -> {
-                    String[] p2mmkdirCommand = {""};
                     String p2mtargetPNGSSequenceExtensionRemoved = null;
                     Path p2mcheckPath = null;
 
@@ -1115,43 +1127,15 @@ public class UserInterface {
                         return;
                     }
 
-                    if (p2mtargetPNGSequenceUserInputType == UserInputTypes.NAME_EXISTING) {
-                        p2mtargetPNGSSequenceExtensionRemoved = p2msanitizedTargetPNGSequenceUserInput.substring(0, p2msanitizedTargetPNGSequenceUserInput.length() - 4);
-                        p2mcheckPath = Paths.get(p2msanitizedOutputLocationUserInput).resolve(p2mtargetPNGSSequenceExtensionRemoved);
-
-                        if (Files.isDirectory(p2mcheckPath)) {
-                            p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2mtargetPNGSSequenceExtensionRemoved + "\"";
-                        } else {
-                            p2mcreatedFolderName = "\"" + p2mtargetPNGSSequenceExtensionRemoved + "\"";
-                        }
-                    } else if (p2mtargetPNGSequenceUserInputType == UserInputTypes.PATH_EXISTING) {
-                        String p2mtempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
-                        p2mtargetPNGSSequenceExtensionRemoved = p2mtempFileName.substring(0, p2mtempFileName.length() - 4);
-                        p2mcheckPath = Paths.get(p2msanitizedOutputLocationUserInput).resolve(p2mtargetPNGSSequenceExtensionRemoved);
-
-                        if (Files.isDirectory(p2mcheckPath)) {
-                            p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2mtargetPNGSSequenceExtensionRemoved + "\"";
-                        } else {
-                            p2mcreatedFolderName = "\"" + p2mtargetPNGSSequenceExtensionRemoved + "\"";
-                        }
+                    if (Files.isDirectory(p2mcheckPath)) {
+                        // Instead of p2mcreatedFolderName, this if clause should check if the output .mp4 already exists
+                        // And of course, if it does exist, it will add the [Time Date] Prefix
+//                            p2mcreatedFolderName = "\"[" + timePrefix + "] " + p2mtargetPNGSSequenceExtensionRemoved + "\"";
+                    } else {
+//                            p2mcreatedFolderName = "\"" + p2mtargetPNGSSequenceExtensionRemoved + "\"";
                     }
 
-                    p2mmkdirCommand = new String[]{"cmd.exe", "/c", "mkdir", p2mcreatedFolderName};
-
-                    ConsoleBridge tempConsoleBridge = new ConsoleBridge(applicationRoot.resolve("Default Output"));
-                    tempConsoleBridge.changeCommand(p2mmkdirCommand);
-                    tempConsoleBridge.changeDirectory(Paths.get(p2msanitizedOutputLocationUserInput));
-                    try {
-                        tempConsoleBridge.executeCommand(true, tempOutput -> {
-                        });
-                    } catch (IOException ex) {
-                        throw new RuntimeException(ex);
-                    }
-
-                    tempConsoleBridge = null;
-                    p2mcreatedFolderName = p2mcreatedFolderName.replace("\"", "");
-
-                    p2moutputLocationArgument = "\"" + Paths.get(p2msanitizedOutputLocationUserInput).resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName) + "_%04d.png\"";
+//                    p2moutputLocationArgument = "\"" + Paths.get(p2msanitizedOutputLocationUserInput).resolve(p2mcreatedFolderName).resolve(p2mcreatedFolderName) + "_%04d.png\"";
                 }
             }
 
@@ -1164,11 +1148,11 @@ public class UserInterface {
             }
             * */
 
-            try {
-                p2mExecuteCommand(p2mfullCommand);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+//            try {
+//                p2mExecuteCommand(p2mfullCommand);
+//            } catch (IOException ex) {
+//                throw new RuntimeException(ex);
+//            }
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
@@ -1185,8 +1169,12 @@ public class UserInterface {
 
         JButton p2mcancelButton = new JButton("Cancel");
         p2mcancelButton.addActionListener(e -> {
-            System.out.print("\nClosing User Interface...");
-            mainFrame.dispose();
+            String p2msanitizedTargetPNGSequenceUserInput = p2mtargetPNGSequenceTextField.getText().strip();
+            String tempFileName = Paths.get(p2msanitizedTargetPNGSequenceUserInput).getFileName().toString();
+            System.out.print(tempFileName);
+
+//            System.out.print("\nClosing User Interface...");
+//            mainFrame.dispose();
         });
         constraints = new GridBagConstraints();
         constraints.gridx = 1;      // Position in grid
